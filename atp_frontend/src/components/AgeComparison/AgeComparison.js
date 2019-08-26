@@ -6,22 +6,18 @@ import PlayerSelector from "./PlayerSelector"
 class AgeComparison extends React.Component {
 	constructor(props) {
 		super(props)
-		this.state = {
-			players: []
-		}
+		this.graph = React.createRef()
 	}
 
 	handle_added_player(id) {
-		this.setState({
-			players: [...this.state.players, id]
-		})
-	} 
+		this.graph.current.addPlayer(id)
+	}
 
 	render() {
 		return (
 			<div>
 				<PlayerSelector added_player_handler={(pl_id) => this.handle_added_player(pl_id)} />
-				<Graph players = {this.state.players} />
+				<Graph ref={this.graph}/>
 				<CurrentPlayers />
 			</div>
 		)

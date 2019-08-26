@@ -23,36 +23,6 @@ class AgeSlider extends React.Component {
 				);
 		}
 
-		const PrettoSlider = withStyles({
-		root: {
-		color: '#52af77',
-		height: 8,
-		},
-		thumb: {
-		height: 24,
-		width: 24,
-		backgroundColor: '#fff',
-		border: '2px solid currentColor',
-		marginTop: -8,
-		marginLeft: -12,
-		'&:focus,&:hover,&$active': {
-		boxShadow: 'inherit',
-		},
-		},
-		active: {},
-		valueLabel: {
-		left: 'calc(-50% + 4px)',
-		},
-		track: {
-		height: 8,
-		borderRadius: 4,
-		},
-		rail: {
-		height: 8,
-		borderRadius: 4,
-		},
-		})(Slider);
-
 
 		const AirbnbSlider = withStyles({
 			root: {
@@ -92,7 +62,7 @@ class AgeSlider extends React.Component {
 				opacity: 1,
 				height: 3,
 			},
-})(Slider);
+		})(Slider);
 
 		return (
 			<div>
@@ -101,9 +71,8 @@ class AgeSlider extends React.Component {
 				aria-label="airbnb slider"
 				defaultValue={[20, 30]}
 				valueLabelDisplay="on"
-				onChange={(e, val) => this.slider_change(e, val)}
+				onChangeCommitted={(e, val) => this.slider_change(e, val)}
 			/>
-			<PrettoSlider valueLabelDisplay="auto" aria-label="pretto slider" defaultValue={20} />
 			</div>
 		)
 	}

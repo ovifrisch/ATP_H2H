@@ -23,6 +23,8 @@ class Graph extends React.Component {
 		'rgb(97, 39, 39, 1)'
 	]
 
+	static 
+
 	generate_color() {
 		var o = Math.round, r = Math.random, s = 255;
 		return 'rgba(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ',' + 1 + ')';
@@ -31,9 +33,7 @@ class Graph extends React.Component {
 	create_dataset(ranks, player_name, player_id) {
 		var color;
 		if (this.state.datasets.length < 8) {
-			console.log(this.state.datasets.length)
 			color = Graph.colors[this.state.datasets.length]
-			console.log(color)
 		}
 		else{
 			color = this.generate_color()
@@ -62,10 +62,17 @@ class Graph extends React.Component {
 				data: ranks,
 			},
 
-			player_id: player_id
+			player_id: player_id,
+			player_name: player_name
 		}
 
 		return res
+	}
+
+	// http GET to flask api to fetch ranking history of player with id=p_id between ages of s and e
+	fetch_ranking_history(p_id, s, e) {
+		var endpt = `/get_ranking_history?player_id=${p_id}&starting_age=${s}&ending_age=${e}`
+		return fetch(endpt)
 	}
 
 	changeAgeRange(start, end) {
@@ -73,23 +80,76 @@ class Graph extends React.Component {
 		// then we don't necessarily need to refetch this data. but for now
 		// to keep things simple, just refetch everything
 		var player_ids = this.state.datasets.map(x => x['player_id'])
-		console.log(player_ids)
+		var player_names = this.state.datasets.map(x => x['player_name'])
+		var new_labels = [];
+		var new_datasets = [];
+		this.state.labels = [];
+		this.state.datasets = [];
+
+		const request = async(idx) => {
+			if (idx >= player_ids.length) {
+				this.setState({
+					datasets: new_datasets,
+					labels: new_labels,
+					start_age: start,
+					end_age: end
+				})
+				return
+			}
+			var endpt = `/get_ranking_history?player_id=${player_ids[idx]}&starting_age=${start}&ending_age=${end}`
+			const response = await fetch(endpt);
+			const data = await response.json();
+			var ranks = data['data'].map(x => x['rank'])
+			var labels = data['data'].map(x => x['age'])
+			if (labels.length > new_labels.length) {
+				new_labels = labels
+			}
+			new_datasets.push(this.create_dataset(ranks, player_names[idx], player_ids[idx]))
+			console.log(new_datasets.length)
+			request(idx + 1)
+		}
+
+		request(0)
+
+
+
+		// var id;
+		// for (var i = 0; i < player_ids.length; i++) {
+		// 	const request = async () => {
+		// 		var endpt = `/get_ranking_history?player_id=${player_ids[i]}&starting_age=${start}&ending_age=${end}`
+		// 		const response = await fetch(endpt);
+		// 		const data = await response.json();
+		// 		console.log(data)
+		// 	}
+		// 	request()
+		// 	// var promise = this.fetch_ranking_history(player_ids[i], start, end)
+		// 	// promise.then(response => response.json().then(data => {
+		// 	// 	var ranks = data['data'].map(x => x['rank'])
+		// 	// 	var labels = data['data'].map(x => x['age'])
+		// 	// 	if (labels.length > new_labels.length) {
+		// 	// 		new_labels = labels
+		// 	// 	}
+		// 	// 	new_datasets.push(this.create_dataset(ranks, player_names[i], player_ids[i]))
+		// 	// 	console.log("got one")
+		// 	// }))
+		// }
+		// console.log("hey")
 	}
 
 	addPlayer(player_id, player_name) {
 
-		fetch(`/get_ranking_history?player_id=${player_id}&starting_age=${this.state.start_age}&ending_age=${this.state.end_age}`).then(response =>
-			response.json().then(data => {
-				var ranks = data['data'].map(x => x['rank'])
-				var new_labels = data['data'].map(x => x['age'])
-				if (new_labels.length < this.state.labels.length) {
-					new_labels = this.state.labels
-				}
-				this.setState({
-					labels: new_labels,
-					datasets: [...this.state.datasets, this.create_dataset(ranks, player_name, player_id)]
-				})
-			}))
+		var promise = this.fetch_ranking_history(player_id, this.state.start_age, this.state.end_age)
+		promise.then(response => response.json().then(data => {
+			var ranks = data['data'].map(x => x['rank'])
+			var new_labels = data['data'].map(x => x['age'])
+			if (new_labels.length < this.state.labels.length) {
+				new_labels = this.state.labels
+			}
+			this.setState({
+				labels: new_labels,
+				datasets: [...this.state.datasets, this.create_dataset(ranks, player_name, player_id)]
+			})
+		}))
 	}
 
 	render() {

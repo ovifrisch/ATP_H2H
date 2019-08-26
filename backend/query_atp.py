@@ -77,6 +77,7 @@ class QueryATP:
 	get their name, country, and dob
 	"""
 	def player_info(self, id_):
+		print(id_)
 		q = """
 			SELECT first_name, last_name, country, dob
 			FROM players

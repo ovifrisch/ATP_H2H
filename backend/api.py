@@ -19,8 +19,12 @@ def get_ranking_history():
 	player_id = int(request.args.get('player_id'))
 	starting_age = int(request.args.get('starting_age'))
 	ending_age = int(request.args.get('ending_age'))
-	p_info = atp.player_info(player_id)[0]
-	dob = parse_dt(p_info[3])
+	p_info = atp.player_info(player_id)
+	print(">>>>>>")
+	print(player_id)
+	print(p_info)
+	print(">>>>>>")
+	dob = parse_dt(p_info[0][3])
 	qres = atp.get_ranking_history(player_id, starting_age, ending_age)
 
 	def parse(history):

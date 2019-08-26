@@ -171,7 +171,17 @@ class Graph extends React.Component {
 
 		const options = {
 			scales: {
+				yAxes: [{
+					scaleLabel: {
+						labelString: "Ranking",
+						display: true
+					}
+				}],
 				xAxes: [{
+					scaleLabel: {
+						labelString: "Age",
+						display: true
+					},
 					ticks: {
 						maxTicksLimit: max_ticks,
 						autoSkip: true,

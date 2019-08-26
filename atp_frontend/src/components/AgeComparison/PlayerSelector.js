@@ -53,7 +53,14 @@ class PlayerSelector extends React.Component {
 	}
 
 	label_click(data) {
-		this.props.added_player_handler(data['value'])
+		var player_name = null;
+		var player_id = data['value']
+		for (var i = 0; i < data['options'].length; i++) {
+			if (data['options'][i]['value'] == player_id) {
+				player_name = data['options'][i]['text']
+			}
+		}
+		this.props.added_player_handler(player_id, player_name)
 	}
 
 	render() {

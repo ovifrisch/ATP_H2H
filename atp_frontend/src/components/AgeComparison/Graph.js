@@ -6,51 +6,99 @@ class Graph extends React.Component {
 		super(props)
 		this.state = {
 			datasets: [],
-			labels: []
+			labels: [],
+			start_age: 20,
+			end_age: 30
 		}
 	}
 
-	create_dataset(ranks, id) {
-		return {
-			label: id.toString(),
-			fill: false,
-			lineTension: 0.1,
-			backgroundColor: 'rgba(75,192,192,0.4)',
-			borderColor: 'rgba(75,192,192,1)',
-			borderCapStyle: 'butt',
-			borderDash: [],
-			borderDashOffset: 0.0,
-			borderJoinStyle: 'miter',
-			pointBorderColor: 'rgba(75,192,192,1)',
-			pointBackgroundColor: '#fff',
-			pointBorderWidth: 1,
-			pointHoverRadius: 5,
-			pointHoverBackgroundColor: 'rgba(75,192,192,1)',
-			pointHoverBorderColor: 'rgba(220,220,220,1)',
-			pointHoverBorderWidth: 2,
-			pointRadius: 1,
-			pointHitRadius: 10,
-			data: ranks
-		}
+	static colors = [
+		'rgb(76, 128, 24, 1)',
+		'rgb(24, 76, 128, 1)',
+		'rgb(128, 24, 128, 1)',
+		'rgb(216, 12, 12, 1)',
+		'rgb(225, 122, 19, 1)',
+		'rgb(19, 225, 225, 1)',
+		'rgb(68, 97, 39, 1)',
+		'rgb(97, 39, 39, 1)'
+	]
+
+	generate_color() {
+		var o = Math.round, r = Math.random, s = 255;
+		return 'rgba(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ',' + 1 + ')';
 	}
 
-	addPlayer(player_id) {
+	create_dataset(ranks, player_name, player_id) {
+		var color;
+		if (this.state.datasets.length < 8) {
+			console.log(this.state.datasets.length)
+			color = Graph.colors[this.state.datasets.length]
+			console.log(color)
+		}
+		else{
+			color = this.generate_color()
+		}
+		var res =
+		{
+			data: {
+				label: player_name,
+				fill: false,
+				lineTension: 0.1,
+				backgroundColor: color,
+				borderColor: color,
+				borderCapStyle: 'butt',
+				borderDash: [],
+				borderDashOffset: 0.0,
+				borderJoinStyle: 'miter',
+				pointBorderColor: color,
+				pointBackgroundColor: '#fff',
+				pointBorderWidth: 1,
+				pointHoverRadius: 5,
+				pointHoverBackgroundColor: color,
+				pointHoverBorderColor: 'rgba(220,220,220,1)',
+				pointHoverBorderWidth: 2,
+				pointRadius: 1,
+				pointHitRadius: 10,
+				data: ranks,
+			},
 
-		fetch(`/get_ranking_history?player_id=${player_id}&starting_age=25&ending_age=26`).then(response =>
+			player_id: player_id
+		}
+
+		return res
+	}
+
+	changeAgeRange(start, end) {
+		// if any part of the interval of the new range is in the old range,
+		// then we don't necessarily need to refetch this data. but for now
+		// to keep things simple, just refetch everything
+		var player_ids = this.state.datasets.map(x => x['player_id'])
+		console.log(player_ids)
+	}
+
+	addPlayer(player_id, player_name) {
+
+		fetch(`/get_ranking_history?player_id=${player_id}&starting_age=${this.state.start_age}&ending_age=${this.state.end_age}`).then(response =>
 			response.json().then(data => {
 				var ranks = data['data'].map(x => x['rank'])
+				var new_labels = data['data'].map(x => x['age'])
+				if (new_labels.length < this.state.labels.length) {
+					new_labels = this.state.labels
+				}
 				this.setState({
-					labels: data['data'].map(x => x['age']),
-					datasets: [...this.state.datasets, this.create_dataset(ranks, player_id)]
+					labels: new_labels,
+					datasets: [...this.state.datasets, this.create_dataset(ranks, player_name, player_id)]
 				})
 			}))
 	}
 
 	render() {
 
+		const datasets = this.state.datasets.map(x => x['data'])
+
 		const data = {
 			labels: this.state.labels,
-			datasets: this.state.datasets
+			datasets: datasets
 		};
 
 

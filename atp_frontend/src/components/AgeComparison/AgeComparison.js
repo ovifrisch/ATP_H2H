@@ -11,8 +11,8 @@ class AgeComparison extends React.Component {
 		this.current_players = React.createRef()
 	}
 
-	handle_slider_change(val) {
-		this.graph.current.changeAgeRange(val[0], val[1])
+	handle_slider_change(val, min_max) {
+		this.graph.current.changeAgeRange(val, min_max)
 	}
 
 	handle_added_player(id, name) {
@@ -29,7 +29,7 @@ class AgeComparison extends React.Component {
 			<div>
 				<PlayerSelector added_player_handler={(pl_id, pl_name) => this.handle_added_player(pl_id, pl_name)} />
 				<Graph ref={this.graph}/>
-				<AgeSlider slider_handler={(val) => this.handle_slider_change(val)}/>
+				<AgeSlider slider_handler={(val, min_max) => this.handle_slider_change(val, min_max)}/>
 				<CurrentPlayers ref={this.current_players} removed_player_handler={(id) => this.handle_removed_player(id)} />
 			</div>
 		)

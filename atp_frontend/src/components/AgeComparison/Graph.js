@@ -67,7 +67,7 @@ class Graph extends React.Component {
 		return fetch(endpt)
 	}
 
-	changeAgeRange(start, end) {
+	changeAgeRange(val, min_max) {
 		// if any part of the interval of the new range is in the old range,
 		// then we don't necessarily need to refetch this data. but for now
 		// to keep things simple, just refetch everything
@@ -76,6 +76,13 @@ class Graph extends React.Component {
 		var player_names = this.state.datasets.map(x => x['player_name'])
 		var new_labels = [];
 		var new_datasets = [];
+		var start = this.state.start_age
+		var end = this.state.end_age
+		if (min_max == "max") {
+			end = val
+		} else {
+			start = val
+		}
 
 		const request = async(idx) => {
 			if (idx >= player_ids.length) {

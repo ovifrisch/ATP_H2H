@@ -7,8 +7,12 @@ class AgeSlider extends React.Component {
 		super(props)
 	}
 
-	slider_change(e, val) {
-		this.props.slider_handler(val)
+	max_change(val) {
+		this.props.slider_handler(val, "max")
+	}
+
+	min_change(val) {
+		this.props.slider_handler(val, "min")
 	}
 
 	render() {
@@ -23,56 +27,56 @@ class AgeSlider extends React.Component {
 				);
 		}
 
-
-		const AirbnbSlider = withStyles({
+		const PrettoSlider = withStyles({
 			root: {
-				color: '#3a8589',
-				height: 3,
-				padding: '13px 0',
+				color: '#52af77',
+				height: 8,
 			},
 			thumb: {
-				height: 27,
-				width: 27,
+				height: 24,
+				width: 24,
 				backgroundColor: '#fff',
-				border: '1px solid currentColor',
-				marginTop: -12,
-				marginLeft: -13,
-				boxShadow: '#ebebeb 0px 2px 2px',
+				border: '2px solid currentColor',
+				marginTop: -8,
+				marginLeft: -12,
 				'&:focus,&:hover,&$active': {
-				  boxShadow: '#ccc 0px 2px 3px 1px',
-			},
-			'& .bar': {
-				// display: inline-block !important;
-				height: 9,
-				width: 1,
-				backgroundColor: 'currentColor',
-				marginLeft: 1,
-				marginRight: 1,
-			},
+					boxShadow: 'inherit',
+				},
 			},
 			active: {},
 			valueLabel: {
 				left: 'calc(-50% + 4px)',
 			},
 			track: {
-				height: 3,
+				height: 8,
+				borderRadius: 4,
 			},
 			rail: {
-				color: '#d8d8d8',
-				opacity: 1,
-				height: 3,
+				height: 8,
+				borderRadius: 4,
 			},
 		})(Slider);
 
+
+		
 		return (
 			<div>
-			<AirbnbSlider
-				ThumbComponent={AirbnbThumbComponent}
-				aria-label="airbnb slider"
-				defaultValue={[20, 30]}
-				valueLabelDisplay="on"
-				onChangeCommitted={(e, val) => this.slider_change(e, val)}
-			/>
+				<PrettoSlider
+					valueLabelDisplay="auto"
+					aria-label="pretto slider"
+					defaultValue={20}
+					onChangeCommitted={(e, data) => this.min_change(data)}
+					min={10}
+					max={50}
+				/>
+				<PrettoSlider
+					valueLabelDisplay="auto"
+					aria-label="pretto slider"
+					defaultValue={30}
+					onChangeCommitted={(e, data) => this.max_change(data)}
+					min={10}
+					max={50}
+				/>
 			</div>
 		)
 	}

@@ -110,6 +110,9 @@ class Graph extends React.Component {
 			}
 		}
 
+		// set the new labels to be the labels of maximum length without the one that's being removed
+		// we don't store all the other labels though...
+
 		this.setState({
 			datasets: this.state.datasets.filter(x => x['player_id'] !== player_id),
 			available_colors: new_available_colors
@@ -149,9 +152,51 @@ class Graph extends React.Component {
 		}))
 	}
 
+	// we want to display at most 12 ticks
+	get_tick(value) {
+	}
+
 	render() {
+		console.log(this.state.end_age)
 
 		const datasets = this.state.datasets.map(x => x['data'])
+
+		var max_ticks;
+		var diff = this.state.end_age - this.state.start_age
+		if (diff > 5) {
+			max_ticks = Math.floor(diff)
+		} else {
+			max_ticks = 10
+		}
+
+		const options = {
+			scales: {
+				xAxes: [{
+					ticks: {
+						maxTicksLimit: max_ticks,
+						autoSkip: true,
+						callback: function(value, index, values) {
+
+							var get_month = (val) => {
+								val = val - Math.floor(val)
+								return Math.ceil(12 * val)
+							}
+
+							if (diff > 5) {
+								return Math.floor(value).toString()
+							} else {
+								var mo = get_month(value)
+								if (mo == 0) {
+									return Math.floor(value).toString()
+								} else {
+									return Math.floor(value).toString() + "." + mo.toString()
+								}
+							}
+						}
+					}
+				}]
+			}
+		}
 
 		const data = {
 			labels: this.state.labels,
@@ -162,7 +207,10 @@ class Graph extends React.Component {
 
 		return (
 			<div>
-				<Line data={data} />
+				<Line
+					data={data}
+					options={options}
+				/>
 			</div>
 		)
 	}

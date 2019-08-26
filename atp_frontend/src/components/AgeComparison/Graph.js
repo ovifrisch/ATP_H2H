@@ -8,7 +8,8 @@ class Graph extends React.Component {
 			datasets: [],
 			labels: [],
 			start_age: 20,
-			end_age: 30
+			end_age: 30,
+			available_colors: Graph.colors
 		}
 	}
 
@@ -28,14 +29,7 @@ class Graph extends React.Component {
 		return 'rgba(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ',' + 1 + ')';
 	}
 
-	create_dataset(ranks, player_name, player_id, color_idx) {
-		var color;
-		if (color_idx < 8) {
-			color = Graph.colors[color_idx]
-		}
-		else{
-			color = this.generate_color()
-		}
+	create_dataset(ranks, player_name, player_id, color) {
 		var res =
 		{
 			data: {
@@ -77,6 +71,7 @@ class Graph extends React.Component {
 		// if any part of the interval of the new range is in the old range,
 		// then we don't necessarily need to refetch this data. but for now
 		// to keep things simple, just refetch everything
+		var old_colors = this.state.datasets.map(x => x['data']['backgroundColor'])
 		var player_ids = this.state.datasets.map(x => x['player_id'])
 		var player_names = this.state.datasets.map(x => x['player_name'])
 		var new_labels = [];
@@ -100,15 +95,33 @@ class Graph extends React.Component {
 			if (labels.length > new_labels.length) {
 				new_labels = labels
 			}
-			new_datasets.push(this.create_dataset(ranks, player_names[idx], player_ids[idx], idx))
-			console.log(new_datasets.length)
+			new_datasets.push(this.create_dataset(ranks, player_names[idx], player_ids[idx], old_colors[idx]))
 			request(idx + 1)
 		}
 
 		request(0)
 	}
 
+	removePlayer(player_id) {
+		var new_available_colors = this.state.available_colors;
+		for (var i = 0; i < this.state.datasets.length; i++) {
+			if (this.state.datasets[i]['player_id'] === player_id) {
+				new_available_colors.unshift(this.state.datasets[i]['data']['backgroundColor'])
+			}
+		}
+
+		this.setState({
+			datasets: this.state.datasets.filter(x => x['player_id'] !== player_id),
+			available_colors: new_available_colors
+		})
+	}
+
 	addPlayer(player_id, player_name) {
+
+		// first check to see if this player has already been added
+		if (this.state.datasets.map(x => x['player_id']).includes(player_id)) {
+			return
+		}
 
 		var promise = this.fetch_ranking_history(player_id, this.state.start_age, this.state.end_age)
 		promise.then(response => response.json().then(data => {
@@ -117,9 +130,21 @@ class Graph extends React.Component {
 			if (new_labels.length < this.state.labels.length) {
 				new_labels = this.state.labels
 			}
+			var color;
+			if (this.state.available_colors.length == 0) {
+				color = this.generate_color()
+			} else {
+				color = this.state.available_colors[0]
+			}
+			var new_available_colors = [];
+			if (this.state.available_colors.length > 1) {
+				new_available_colors = this.state.available_colors.slice(1)
+			}
+
 			this.setState({
 				labels: new_labels,
-				datasets: [...this.state.datasets, this.create_dataset(ranks, player_name, player_id, this.state.datasets.length)]
+				datasets: [...this.state.datasets, this.create_dataset(ranks, player_name, player_id, color)],
+				available_colors: new_available_colors
 			})
 		}))
 	}

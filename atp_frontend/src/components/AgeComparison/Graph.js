@@ -23,17 +23,15 @@ class Graph extends React.Component {
 		'rgb(97, 39, 39, 1)'
 	]
 
-	static 
-
 	generate_color() {
 		var o = Math.round, r = Math.random, s = 255;
 		return 'rgba(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ',' + 1 + ')';
 	}
 
-	create_dataset(ranks, player_name, player_id) {
+	create_dataset(ranks, player_name, player_id, color_idx) {
 		var color;
-		if (this.state.datasets.length < 8) {
-			color = Graph.colors[this.state.datasets.length]
+		if (color_idx < 8) {
+			color = Graph.colors[color_idx]
 		}
 		else{
 			color = this.generate_color()
@@ -83,8 +81,6 @@ class Graph extends React.Component {
 		var player_names = this.state.datasets.map(x => x['player_name'])
 		var new_labels = [];
 		var new_datasets = [];
-		this.state.labels = [];
-		this.state.datasets = [];
 
 		const request = async(idx) => {
 			if (idx >= player_ids.length) {
@@ -104,36 +100,12 @@ class Graph extends React.Component {
 			if (labels.length > new_labels.length) {
 				new_labels = labels
 			}
-			new_datasets.push(this.create_dataset(ranks, player_names[idx], player_ids[idx]))
+			new_datasets.push(this.create_dataset(ranks, player_names[idx], player_ids[idx], idx))
 			console.log(new_datasets.length)
 			request(idx + 1)
 		}
 
 		request(0)
-
-
-
-		// var id;
-		// for (var i = 0; i < player_ids.length; i++) {
-		// 	const request = async () => {
-		// 		var endpt = `/get_ranking_history?player_id=${player_ids[i]}&starting_age=${start}&ending_age=${end}`
-		// 		const response = await fetch(endpt);
-		// 		const data = await response.json();
-		// 		console.log(data)
-		// 	}
-		// 	request()
-		// 	// var promise = this.fetch_ranking_history(player_ids[i], start, end)
-		// 	// promise.then(response => response.json().then(data => {
-		// 	// 	var ranks = data['data'].map(x => x['rank'])
-		// 	// 	var labels = data['data'].map(x => x['age'])
-		// 	// 	if (labels.length > new_labels.length) {
-		// 	// 		new_labels = labels
-		// 	// 	}
-		// 	// 	new_datasets.push(this.create_dataset(ranks, player_names[i], player_ids[i]))
-		// 	// 	console.log("got one")
-		// 	// }))
-		// }
-		// console.log("hey")
 	}
 
 	addPlayer(player_id, player_name) {
@@ -147,7 +119,7 @@ class Graph extends React.Component {
 			}
 			this.setState({
 				labels: new_labels,
-				datasets: [...this.state.datasets, this.create_dataset(ranks, player_name, player_id)]
+				datasets: [...this.state.datasets, this.create_dataset(ranks, player_name, player_id, this.state.datasets.length)]
 			})
 		}))
 	}

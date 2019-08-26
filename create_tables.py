@@ -25,6 +25,17 @@ commands = [
 		FOREIGN KEY(player_id) REFERENCES players(player_id)
 	);
 	""",
+
+	"""
+	CREATE TABLE IF NOT EXISTS matches(
+		winner_id int,
+		loser_id int,
+		match_date date,
+		tournament varchar(50),
+		score varchar(50),
+		round varchar(10)
+	);
+	"""
 ]
 
 for command in commands:

@@ -28,6 +28,15 @@ class QueryATP:
 		return self.get(q)
 
 
+	def get_matches(self, player_id):
+		q = """
+			SELECT *
+			FROM matches
+			WHERE winner_id = {} or loser_id = {}
+		""".format(player_id, player_id)
+		return self.get(q)
+
+
 	"""
 	Get all the players whose first or last name
 	starts with the given prefix
@@ -85,8 +94,12 @@ class QueryATP:
 
 
 	def get_head2head(self, player_id1, player_id2):
-		pass
-
+		q = """
+			SELECT *
+			FROM matches
+			WHERE winner_id = {} and loser_id = {} or winner_id = {} and loser_id = {}
+		""".format(player_id1, player_id2, player_id2, player_id1)
+		return self.get(q)
 
 	"""
 	get all
@@ -148,12 +161,16 @@ def plot_players(atp, players, start, end):
 
 if __name__ == "__main__":
 	atp = QueryATP()
+	i1 = atp.player_id("Rafael", "Nadal")[0][0]
+	i2 = atp.player_id("Novak", "Djokovic")[0][0]
+	r = atp.get_head2head(i1, i2)
+	print(r)
+	# players = ["Andrey Rublev"]
+	# plot_players(atp, players, 20, 40)
 	# all_rafa = atp.get_ranking_history(104745, 0, 26)
 	# print(len(all_rafa))
 	# rafa_older_25 = atp.get_ranking_history(104745, 25, 26)
 	# print(rafa_older_25)
-	players = ["Andrey Rublev"]
-	plot_players(atp, players, 20, 40)
 	# pl_id = 104745
 	# player_info = atp.player_info(pl_id)[0]
 	# rank_hist = parse_hist(atp.get_ranking_history(pl_id, 10, 50))

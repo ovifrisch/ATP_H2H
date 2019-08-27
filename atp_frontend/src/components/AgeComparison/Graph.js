@@ -6,11 +6,24 @@ class Graph extends React.Component {
 		super(props)
 		this.state = {
 			datasets: [],
-			labels: [],
+			labels: this.get_labels(20, 30),
 			start_age: 20,
 			end_age: 30,
 			available_colors: Graph.colors
 		}
+	}
+
+	get_labels(start_yr, end_yr) {
+		if (start_yr >= end_yr) {
+			return []
+		}
+		var start = start_yr + (1/96)
+		var labels = []
+		while (start <= end_yr) {
+			labels.push(start)
+			start = start + (1/96)
+		}
+		return labels
 	}
 
 	static colors = [
@@ -29,11 +42,13 @@ class Graph extends React.Component {
 		return 'rgba(' + o(r()*s) + ',' + o(r()*s) + ',' + o(r()*s) + ',' + 1 + ')';
 	}
 
-	create_dataset(ranks, player_name, player_id, color) {
+	create_dataset(ranks, dates, player_name, player_id, color) {
 		var res =
 		{
 			data: {
+				my_id: player_id,
 				label: player_name,
+				spanGaps: true,
 				fill: false,
 				lineTension: 0.1,
 				backgroundColor: color,
@@ -53,7 +68,7 @@ class Graph extends React.Component {
 				pointHitRadius: 10,
 				data: ranks,
 			},
-
+			dates: dates,
 			player_id: player_id,
 			player_name: player_name
 		}
@@ -67,6 +82,87 @@ class Graph extends React.Component {
 		return fetch(endpt)
 	}
 
+	// http GET to flask api to fetch significant matches for this player at this age
+	fetch_significant_matches(p_id, date) {
+
+		// const add_weeks = (date, N) => {
+
+		// 	if (N == 0) {
+		// 		return date
+		// 	}
+
+		// 	var year = parseInt(date['yr'])
+		// 	var mo = parseInt(date['mo'])
+		// 	var day = parseInt(date['day'])
+
+		// 	if (day + 7 <= 30) {
+		// 		day = day + 7
+		// 		return add_weeks({'yr': year.toString(), 'mo':mo.toString(), 'day':day.toString()}, N - 1)
+		// 	}
+
+		// 	day = day + 7 - 30
+		// 	mo += 1
+		// 	if (mo == 13) {
+		// 		mo = 1
+		// 		year += 1
+		// 	}
+		// 	return add_weeks({'yr': year.toString(), 'mo':mo.toString(), 'day':day.toString()}, N - 1)
+		// }
+
+		const sub_weeks = (date, N) => {
+			if (N == 0) {
+				return date
+			}
+
+			var year = date['yr']
+			var mo = date['mo']
+			var day = date['day']
+
+			if (day - 7 >= 1) {
+				day = day - 7
+				return sub_weeks({'yr': year, 'mo':mo, 'day':day}, N - 1)
+			}
+
+			day = 30 - (7 - day)
+			mo -= 1
+			if (mo == 2 && day >= 29) {
+				day = 28
+			}
+
+			if (mo == 0) {
+				mo = 12
+				year -= 1
+			}
+
+			return sub_weeks({'yr': year, 'mo':mo, 'day':day}, N - 1)
+		}
+
+		const date_str = (date) => {
+			var mo;
+			var day;
+			var yr = date['yr']
+			if (date['mo'] < 10) {
+				mo = "0" + date['mo'].toString()
+			} else{
+				mo = date['mo'].toString()
+			}
+			if (date['day'] < 10){
+				day = "0" + date['day'].toString()
+			} else {
+				day = date['day'].toString()
+			}
+			var res = yr + mo + day
+			return res
+		}
+
+		var date1 = date_str(sub_weeks(date, 2))
+		var date2 = date_str(date)
+		console.log(date2)
+		console.log(date1)
+		var endpt = `/get_significant_matches?player_id=${p_id}&date1=${date1}&date2=${date2}`
+		return fetch(endpt)
+	}
+
 	changeAgeRange(val, min_max) {
 		// if any part of the interval of the new range is in the old range,
 		// then we don't necessarily need to refetch this data. but for now
@@ -74,7 +170,6 @@ class Graph extends React.Component {
 		var old_colors = this.state.datasets.map(x => x['data']['backgroundColor'])
 		var player_ids = this.state.datasets.map(x => x['player_id'])
 		var player_names = this.state.datasets.map(x => x['player_name'])
-		var new_labels = [];
 		var new_datasets = [];
 		var start = this.state.start_age
 		var end = this.state.end_age
@@ -83,6 +178,7 @@ class Graph extends React.Component {
 		} else {
 			start = val
 		}
+		var new_labels = this.get_labels(start, end)
 
 		const request = async(idx) => {
 			if (idx >= player_ids.length) {
@@ -97,12 +193,14 @@ class Graph extends React.Component {
 			var endpt = `/get_ranking_history?player_id=${player_ids[idx]}&starting_age=${start}&ending_age=${end}`
 			const response = await fetch(endpt);
 			const data = await response.json();
+			var dates = data['data'].map(x => x['date'])
 			var ranks = data['data'].map(x => x['rank'])
 			var labels = data['data'].map(x => x['age'])
-			if (labels.length > new_labels.length) {
-				new_labels = labels
-			}
-			new_datasets.push(this.create_dataset(ranks, player_names[idx], player_ids[idx], old_colors[idx]))
+			var values = this.pad_ranks(ranks, dates, labels, start, end)
+			var padded_ranks = values[0]
+			var padded_dates = values[1]
+			var new_dataset = this.create_dataset(padded_ranks, padded_dates, player_names[idx], player_ids[idx], old_colors[idx])
+			new_datasets.push(new_dataset)
 			request(idx + 1)
 		}
 
@@ -126,6 +224,33 @@ class Graph extends React.Component {
 		})
 	}
 
+	get_color() {
+		var color;
+		if (this.state.available_colors.length == 0) {
+			return this.generate_color()
+		}
+		return this.state.available_colors[0]
+	}
+
+	pad_ranks(ranks, dates, labels, start, end) {
+		var new_ranks = Array(Math.max(end - start, 0) * 96).fill(null)
+		var new_dates = Array(Math.max(end - start, 0) * 96).fill(null)
+		for (var i = 0; i < labels.length; i++) {
+			if (labels[i] < start || labels[i] > end) {
+				continue
+			}
+			var idx = Math.floor((labels[i] - start) / (1/96))
+			new_dates[idx] = dates[i]
+			if (new_ranks[idx] === null) {
+				new_ranks[idx] = ranks[i]
+			} else {
+				console.log(Math.abs(new_ranks[idx] - ranks[i]))
+				new_ranks[idx] = Math.min(new_ranks[idx], ranks[i])
+			}
+		}
+		return [new_ranks, new_dates]
+	}
+
 	addPlayer(player_id, player_name) {
 
 		// first check to see if this player has already been added
@@ -136,35 +261,50 @@ class Graph extends React.Component {
 		var promise = this.fetch_ranking_history(player_id, this.state.start_age, this.state.end_age)
 		promise.then(response => response.json().then(data => {
 			var ranks = data['data'].map(x => x['rank'])
-			var new_labels = data['data'].map(x => x['age'])
-			if (new_labels.length < this.state.labels.length) {
-				new_labels = this.state.labels
-			}
-			var color;
-			if (this.state.available_colors.length == 0) {
-				color = this.generate_color()
-			} else {
-				color = this.state.available_colors[0]
-			}
-			var new_available_colors = [];
-			if (this.state.available_colors.length > 1) {
-				new_available_colors = this.state.available_colors.slice(1)
-			}
-
+			var dates = data['data'].map(x => x['date'])
+			var labels = data['data'].map(x => x['age'])
+			var values = this.pad_ranks(ranks, dates, labels, this.state.start_age, this.state.end_age)
+			var padded_ranks = values[0]
+			var padded_dates = values[1]
+			var color = this.get_color()
+			var new_dataset = this.create_dataset(padded_ranks, padded_dates, player_name, player_id, color)
 			this.setState({
-				labels: new_labels,
-				datasets: [...this.state.datasets, this.create_dataset(ranks, player_name, player_id, color)],
-				available_colors: new_available_colors
+				datasets: [...this.state.datasets, new_dataset],
+				available_colors: this.state.available_colors.slice(1)
 			})
 		}))
 	}
 
-	// we want to display at most 12 ticks
-	get_tick(value) {
+	handle_hover(e, data) {
+		if (data.length == 0) {
+			return
+		}
+		var hover_y = e['layerY']
+		var others = data.map(x => [x['_model']['y']])
+		
+		// now find the index in others that hover_x, hover_y is closest to
+		var min_idx = 0
+		var min_dist = Math.abs(hover_y - others[0])
+		for (var i = 0; i < others.length; i++) {
+			var dist = Math.abs(hover_y - others[i])
+			if (dist < min_dist) {
+				min_idx = i;
+				min_dist = dist
+			}
+		}
+		var player_id = this.state.datasets[min_idx]['player_id']
+		console.log(player_id)
+		// var player_name = this.state.datasets[min_idx]['player_name']
+		// console.log(player_name)
+		var date = this.state.datasets[min_idx]['dates'][data[0]['_index']]
+		var promise = this.fetch_significant_matches(player_id, date)
+		promise.then(response => response.json().then(data => {
+			console.log(data)
+		}))
+		// . then...
 	}
 
 	render() {
-		console.log(this.state.end_age)
 
 		const datasets = this.state.datasets.map(x => x['data'])
 
@@ -212,15 +352,19 @@ class Graph extends React.Component {
 						}
 					}
 				}]
-			}
+			},
+
+			tooltips: {
+				mode: 'nearest'
+			},
+
+			onHover: (e, data) => this.handle_hover(e, data)
 		}
 
 		const data = {
 			labels: this.state.labels,
 			datasets: datasets
 		};
-
-
 
 		return (
 			<div>

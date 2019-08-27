@@ -9,6 +9,15 @@ main = Blueprint('main', __name__)
 # 	params = request.get_json()
 # 	player_id = int(params['player_id'])
 
+# find the tournament name, and matches for this player between dat1 and date2
+@main.route('/get_significant_matches')
+def get_significant_matches():
+	player_id = int(request.args.get('player_id'))
+	starting_age = request.args.get('date1')
+	ending_age = request.args.get('date2')
+	data = atp.get_significant_matches(player_id, starting_age, ending_age)
+	return jsonify({'data': data})
+
 
 @main.route('/get_ranking_history')
 def get_ranking_history():
@@ -20,10 +29,6 @@ def get_ranking_history():
 	starting_age = int(request.args.get('starting_age'))
 	ending_age = int(request.args.get('ending_age'))
 	p_info = atp.player_info(player_id)
-	print(">>>>>>")
-	print(player_id)
-	print(p_info)
-	print(">>>>>>")
 	dob = parse_dt(p_info[0][3])
 	qres = atp.get_ranking_history(player_id, starting_age, ending_age)
 
@@ -66,7 +71,7 @@ def get_ranking_history():
 
 	data = []
 	for i in range(len(ages)):
-		data.append({'age': ages[i], 'rank': ranks[i]})
+		data.append({'age': ages[i], 'rank': ranks[i], 'date':dates[i]})
 
 	return jsonify({'data':data})
 

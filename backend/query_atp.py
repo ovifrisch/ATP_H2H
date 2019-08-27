@@ -86,6 +86,58 @@ class QueryATP:
 		return self.get(q)
 
 	"""
+	get the matches for this player between age_start and age_end
+	"""
+	def get_significant_matches(self, player_id, date_start, date_end):
+		players = """
+			SELECT player_id, first_name, last_name
+			FROM players
+		"""
+
+		# select the matches where this player is the winner
+		temp1 = """
+			SELECT DISTINCT first_name, last_name, loser_id, match_date, tournament, score, round
+			FROM matches
+			INNER JOIN ({}) AS A
+			ON matches.winner_id = A.player_id
+			WHERE player_id = {} and match_date >= '{}' and match_date <= '{}'
+			ORDER BY match_date ASC
+		""".format(players, player_id, date_start, date_end)
+
+		t1 = """
+			SELECT DISTINCT A.first_name, A.last_name, B.first_name, B.last_name, A.match_date, A.tournament, A.score, A.round
+			FROM ({}) AS A
+			INNER JOIN ({}) AS B
+			ON A.loser_id = B.player_id
+		""".format(temp1, players)
+
+		# select the matches where this player is the loser
+		temp2 = """
+			SELECT DISTINCT first_name, last_name, winner_id, match_date, tournament, score, round
+			FROM matches
+			INNER JOIN ({}) AS A
+			ON matches.loser_id = A.player_id
+			WHERE player_id = {} and match_date >= '{}' and match_date <= '{}'
+			ORDER BY match_date ASC
+		""".format(players, player_id, date_start, date_end)
+
+		t2 = """
+			SELECT DISTINCT B.first_name, B.last_name, A.first_name, A.last_name, A.match_date, A.tournament, A.score, A.round
+			FROM ({}) AS A
+			INNER JOIN ({}) AS B
+			ON A.winner_id = B.player_id
+		""".format(temp2, players)
+
+		q = """
+			SELECT *
+			FROM ({}) AS A
+			UNION
+			({})
+		""".format(t1, t2)
+
+		return self.get(q)
+
+	"""
 	get each ranking and ranking_date pair for
 	this player between the ages of age_start
 	and age_end
@@ -185,7 +237,7 @@ def plot_players(atp, players, start, end):
 
 if __name__ == "__main__":
 	atp = QueryATP()
-	print(atp.topTenFiltered(""))
+	print(atp.get_matches(104745, "20190101", "20190201"))
 	# i1 = atp.player_id("Rafael", "Nadal")[0][0]
 	# i2 = atp.player_id("Novak", "Djokovic")[0][0]
 	# r = atp.get_head2head(i1, i2)

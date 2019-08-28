@@ -71,7 +71,7 @@ def get_ranking_history():
 			return history
 		this_start = ranking_date_to_age(history[0]['date'], dob)
 		this_end = ranking_date_to_age(history[-1]['date'], dob)
-		ratio = (this_start - this_end) / (ending_age - starting_age)
+		ratio = (this_end - this_start) / (ending_age - starting_age)
 		num_els = min(40*ratio, len(history))
 		idxs = np.round(np.linspace(0, len(history) - 1, num_els)).astype(int)
 		res = [history[i] for i in idxs]

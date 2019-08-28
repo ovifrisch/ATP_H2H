@@ -83,35 +83,35 @@ class Graph extends React.Component {
 	}
 
 	// http GET to flask api to fetch significant matches for this player at this age
-	fetch_significant_matches(p_id, date) {
+	fetch_significant_matches(p_id, date1, date2) {
 
-		const sub_weeks = (date, N) => {
-			if (N == 0) {
-				return date
-			}
+		// const sub_weeks = (date, N) => {
+		// 	if (N == 0) {
+		// 		return date
+		// 	}
 
-			var year = date['yr']
-			var mo = date['mo']
-			var day = date['day']
+		// 	var year = date['yr']
+		// 	var mo = date['mo']
+		// 	var day = date['day']
 
-			if (day - 7 >= 1) {
-				day = day - 7
-				return sub_weeks({'yr': year, 'mo':mo, 'day':day}, N - 1)
-			}
+		// 	if (day - 7 >= 1) {
+		// 		day = day - 7
+		// 		return sub_weeks({'yr': year, 'mo':mo, 'day':day}, N - 1)
+		// 	}
 
-			day = 30 - (7 - day)
-			mo -= 1
-			if (mo == 2 && day >= 29) {
-				day = 28
-			}
+		// 	day = 30 - (7 - day)
+		// 	mo -= 1
+		// 	if (mo == 2 && day >= 29) {
+		// 		day = 28
+		// 	}
 
-			if (mo == 0) {
-				mo = 12
-				year -= 1
-			}
+		// 	if (mo == 0) {
+		// 		mo = 12
+		// 		year -= 1
+		// 	}
 
-			return sub_weeks({'yr': year, 'mo':mo, 'day':day}, N - 1)
-		}
+		// 	return sub_weeks({'yr': year, 'mo':mo, 'day':day}, N - 1)
+		// }
 
 		const date_str = (date) => {
 			var mo;
@@ -131,8 +131,8 @@ class Graph extends React.Component {
 			return res
 		}
 
-		var date1 = date_str(sub_weeks(date, 2))
-		var date2 = date_str(date)
+		date1 = date_str(date1)
+		date2 = date_str(date2)
 		var endpt = `/get_significant_matches?player_id=${p_id}&date1=${date1}&date2=${date2}`
 		return fetch(endpt)
 	}
@@ -279,8 +279,22 @@ class Graph extends React.Component {
 
 		var player_id = target_dataset['player_id']
 		var player_name = target_dataset['player_name']
-		var date = target_dataset['dates'][data[0]['_index']]
-		var promise = this.fetch_significant_matches(player_id, date)
+		var idx = data[0]['_index']
+		var right_date = target_dataset['dates'][idx]
+		// get the previous two dates
+		var left_date = null;
+		idx -= 1;
+		while (idx >= 0) {
+			left_date = target_dataset['dates'][idx]
+			if (left_date !== null) {
+				break
+			}
+			idx -= 1
+		}
+		if (left_date === null) {
+			return
+		}
+		var promise = this.fetch_significant_matches(player_id, left_date, right_date)
 		promise.then(response => response.json().then(data => {
 			console.log(data)
 		}))

@@ -1,6 +1,7 @@
 import React from 'react';
 import ChartComponent, {Chart, Line} from 'react-chartjs-2';
 import MatchInfo from './MatchInfo'
+import './styles/Graph.css'
 
 class Graph extends React.Component {
 	constructor(props) {
@@ -403,7 +404,7 @@ class Graph extends React.Component {
 
 		return (
 			<div>
-				<div>
+				<div id="the_chart">
 					<ChartComponent
 						type='myLine'
 						ref="graph"

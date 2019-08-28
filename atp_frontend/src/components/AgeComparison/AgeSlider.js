@@ -1,6 +1,7 @@
 import React from 'react';
 import { Slider } from '@material-ui/core';
 import { withStyles, makeStyles } from '@material-ui/core/styles';
+import './styles/AgeSlider.css'
 
 class AgeSlider extends React.Component {
 	constructor(props) {
@@ -60,7 +61,7 @@ class AgeSlider extends React.Component {
 
 		
 		return (
-			<div>
+			<div id="the_age_slider">
 				<PrettoSlider
 					valueLabelDisplay="auto"
 					aria-label="pretto slider"

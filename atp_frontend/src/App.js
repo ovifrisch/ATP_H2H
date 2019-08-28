@@ -11,11 +11,13 @@ import {
 
 function App() {
   return (
-    <Router>
+    <div id="the_app">
       <Header />
-      <Route exact path="/" component={AgeComparison} />
-      <Route path="/h2h" component={Head2Head} />
-    </Router>
+      <Router>
+        <Route exact path="/" component={AgeComparison} />
+        <Route path="/h2h" component={Head2Head} />
+      </Router>
+    </div>
 
   );
 }

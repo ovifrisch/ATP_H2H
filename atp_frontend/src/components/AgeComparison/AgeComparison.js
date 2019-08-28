@@ -3,6 +3,7 @@ import CurrentPlayers from "./CurrentPlayers"
 import Graph from "./Graph"
 import PlayerSelector from "./PlayerSelector"
 import AgeSlider from "./AgeSlider"
+import './styles/AgeComparison.css'
 
 class AgeComparison extends React.Component {
 	constructor(props) {
@@ -26,7 +27,7 @@ class AgeComparison extends React.Component {
 
 	render() {
 		return (
-			<div>
+			<div id="the_age_comparison">
 				<PlayerSelector added_player_handler={(pl_id, pl_name) => this.handle_added_player(pl_id, pl_name)} />
 				<Graph ref={this.graph}/>
 				<AgeSlider slider_handler={(val, min_max) => this.handle_slider_change(val, min_max)}/>

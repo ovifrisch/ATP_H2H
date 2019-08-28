@@ -180,7 +180,6 @@ class Graph extends React.Component {
 			new_datasets.push(new_dataset)
 			request(idx + 1)
 		}
-
 		request(0)
 	}
 
@@ -306,6 +305,17 @@ class Graph extends React.Component {
 			return
 		}
 		this.highlight_segment(indices['data_idx'], indices['i1'], indices['i2'])
+		this.fetch_and_process_match_data(indices['data_idx'], indices['i1'], indices['i2'])
+	}
+
+	fetch_and_process_match_data(data_idx, i1, i2) {
+		var player_id = this.state.datasets[data_idx]['player_id']
+		var left_date = this.state.datasets[data_idx]['dates'][i1]
+		var right_date = this.state.datasets[data_idx]['dates'][i2]
+		var promise = this.fetch_significant_matches(player_id, left_date, right_date)
+		promise.then(response => response.json().then(data => {
+			console.log(data)
+		}))
 	}
 
 	handle_hover2(e, data) {

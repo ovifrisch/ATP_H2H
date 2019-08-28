@@ -5,6 +5,7 @@ import MatchInfo from './MatchInfo'
 class Graph extends React.Component {
 	constructor(props) {
 		super(props)
+		this.info_box = React.createRef()
 		this.state = {
 			datasets: [],
 			labels: this.get_labels(20, 30),
@@ -13,7 +14,8 @@ class Graph extends React.Component {
 			available_colors: Graph.colors,
 			highlight_data_idx: -1,
 			highlight_idx1: 0,
-			highlight_idx2: 0
+			highlight_idx2: 0,
+			match_data: []
 		}
 	}
 
@@ -285,6 +287,7 @@ class Graph extends React.Component {
 	}
 
 	display_match_data(data, x, y) {
+		this.info_box.current.set_match_data(data['data'])
 		document.getElementById("the_table").setAttribute("style", `display:block; left:${x}px; top:${Math.max(0, y-240)}px`)
 	}
 
@@ -398,7 +401,6 @@ class Graph extends React.Component {
 			}
 		});
 
-
 		return (
 			<div>
 				<div>
@@ -409,7 +411,7 @@ class Graph extends React.Component {
 						options={options}
 					/>
 				</div>
-				<MatchInfo />
+				<MatchInfo ref={this.info_box}/>
 			</div>
 		)
 	}

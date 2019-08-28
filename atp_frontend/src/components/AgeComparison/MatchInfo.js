@@ -13,6 +13,10 @@ class MatchInfo extends React.Component {
 		super(props)
 	}
 
+	set_match_data(data) {
+		console.log(data)
+	}
+
 	render() {
 
 		function createData(name, calories, fat, carbs, protein) {

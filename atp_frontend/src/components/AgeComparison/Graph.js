@@ -85,30 +85,6 @@ class Graph extends React.Component {
 	// http GET to flask api to fetch significant matches for this player at this age
 	fetch_significant_matches(p_id, date) {
 
-		// const add_weeks = (date, N) => {
-
-		// 	if (N == 0) {
-		// 		return date
-		// 	}
-
-		// 	var year = parseInt(date['yr'])
-		// 	var mo = parseInt(date['mo'])
-		// 	var day = parseInt(date['day'])
-
-		// 	if (day + 7 <= 30) {
-		// 		day = day + 7
-		// 		return add_weeks({'yr': year.toString(), 'mo':mo.toString(), 'day':day.toString()}, N - 1)
-		// 	}
-
-		// 	day = day + 7 - 30
-		// 	mo += 1
-		// 	if (mo == 13) {
-		// 		mo = 1
-		// 		year += 1
-		// 	}
-		// 	return add_weeks({'yr': year.toString(), 'mo':mo.toString(), 'day':day.toString()}, N - 1)
-		// }
-
 		const sub_weeks = (date, N) => {
 			if (N == 0) {
 				return date
@@ -157,8 +133,6 @@ class Graph extends React.Component {
 
 		var date1 = date_str(sub_weeks(date, 2))
 		var date2 = date_str(date)
-		console.log(date2)
-		console.log(date1)
 		var endpt = `/get_significant_matches?player_id=${p_id}&date1=${date1}&date2=${date2}`
 		return fetch(endpt)
 	}
@@ -215,9 +189,6 @@ class Graph extends React.Component {
 			}
 		}
 
-		// set the new labels to be the labels of maximum length without the one that's being removed
-		// we don't store all the other labels though...
-
 		this.setState({
 			datasets: this.state.datasets.filter(x => x['player_id'] !== player_id),
 			available_colors: new_available_colors
@@ -244,7 +215,6 @@ class Graph extends React.Component {
 			if (new_ranks[idx] === null) {
 				new_ranks[idx] = ranks[i]
 			} else {
-				console.log(Math.abs(new_ranks[idx] - ranks[i]))
 				new_ranks[idx] = Math.min(new_ranks[idx], ranks[i])
 			}
 		}
@@ -292,16 +262,26 @@ class Graph extends React.Component {
 				min_dist = dist
 			}
 		}
-		var player_id = this.state.datasets[min_idx]['player_id']
-		console.log(player_id)
-		// var player_name = this.state.datasets[min_idx]['player_name']
-		// console.log(player_name)
-		var date = this.state.datasets[min_idx]['dates'][data[0]['_index']]
+
+		// now get the rgb value at this index
+		var clr = data[min_idx]['_options']['borderColor']
+		// now find the dataset index that has this color
+		var target_dataset;
+		var dset;
+		for (dset of this.state.datasets) {
+			if (dset['data']['borderColor'] == clr) {
+				target_dataset = dset
+				break
+			}
+		}
+
+		var player_id = target_dataset['player_id']
+		var player_name = target_dataset['player_name']
+		var date = target_dataset['dates'][data[0]['_index']]
 		var promise = this.fetch_significant_matches(player_id, date)
 		promise.then(response => response.json().then(data => {
 			console.log(data)
 		}))
-		// . then...
 	}
 
 	render() {

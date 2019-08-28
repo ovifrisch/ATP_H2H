@@ -4,11 +4,6 @@ from query_atp import QueryATP
 atp = QueryATP()
 main = Blueprint('main', __name__)
 
-# @main.route('/get_player_name')
-# def get_player_name():
-# 	params = request.get_json()
-# 	player_id = int(params['player_id'])
-
 # find the tournament name, and matches for this player between dat1 and date2
 @main.route('/get_significant_matches')
 def get_significant_matches():
@@ -29,6 +24,7 @@ def get_ranking_history():
 	starting_age = int(request.args.get('starting_age'))
 	ending_age = int(request.args.get('ending_age'))
 	p_info = atp.player_info(player_id)
+	print(p_info[0][3])
 	dob = parse_dt(p_info[0][3])
 	qres = atp.get_ranking_history(player_id, starting_age, ending_age)
 
@@ -40,6 +36,25 @@ def get_ranking_history():
 			entry = {'date':date, 'rank':rank}
 			res.append(entry)
 		return res
+
+	"""
+	filter out rankings that have not changed since previous ranking date,
+	keeping only the first and last instances of that ranking
+	ex: [1, 1, 1, 1, 2, 2, 2, 3, 3] => [1, 1, 2, 2, 3, 3]
+	"""
+	def filter(history):
+		if (len(history) == 0):
+			return history
+		filtered = [history[0]]
+		for i in range(1, len(history) - 1):
+			if (history[i]['rank'] == history[i-1]['rank'] and history[i]['rank'] == history[i+1]['rank']):
+				continue
+			else:
+				filtered.append(history[i])
+		if (len(history) > 1):
+			filtered.append(history[-1])
+		return filtered
+
 
 	def ranking_date_to_age(rank_date, dob):
 
@@ -64,7 +79,7 @@ def get_ranking_history():
 			age = get_age(rank_date, dob)
 			return age[0] + (age[1] / 12) + ((1/12) * (age[2] / 30))
 
-	date_ranking = parse(qres)
+	date_ranking = filter(parse(qres))
 	ranks = [x['rank'] for x in date_ranking]
 	dates = [x['date'] for x in date_ranking]
 	ages = list(map(lambda x: ranking_date_to_age(x, dob), dates))
@@ -103,24 +118,3 @@ def topTenPlayers():
 	parsed_data = parse(qres)
 	return jsonify({'data': parsed_data})
 
-
-@main.route('/add_movie', methods=['POST'])
-def add_movie():
-	movie_data = request.get_json()
-
-	new_movie = Movie(title=movie_data['title'], rating=movie_data['rating'])
-
-	db.session.add(new_movie)
-	db.session.commit()
-	return 'Done', 201
-
-
-@main.route('/movies')
-def movies():
-	movie_list = Movie.query.all()
-	movies = []
-
-	for movie in movie_list:
-		movies.append({'title': movie.title, 'rating': movie.rating})
-
-	return jsonify({'movies':movies})

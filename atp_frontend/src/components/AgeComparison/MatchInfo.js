@@ -11,13 +11,57 @@ import './MatchInfo.css'
 class MatchInfo extends React.Component {
 	constructor(props) {
 		super(props)
+		this.state = {
+			match_data: []
+		}
 	}
 
 	set_match_data(data) {
-		console.log(data)
+		this.setState({
+			match_data: data
+		})
 	}
 
 	render() {
+		const tables = this.state.match_data.map(tourney => {
+			return (
+				<Table key={tourney['name']} size='small'>
+					<TableHead>
+						<TableRow>
+							<TableCell align="left">Tournament</TableCell>
+							<TableCell align="left">Round</TableCell>
+							<TableCell align="left">Winner</TableCell>
+							<TableCell align="left">Loser</TableCell>
+							<TableCell align="left">Score</TableCell>
+						</TableRow>
+					</TableHead>
+					<TableBody>
+					{
+						tourney['matches'].map(match => (
+							<TableRow key={match['winner']['first_name'] + match['winner']['last_name'] + match['loser']['first_name'] + match['loser']['last_name']}>
+								<TableCell align="left">{tourney['name']}</TableCell>
+								<TableCell align="left">{match['round']}</TableCell>
+								<TableCell align="left">{match['winner']['first_name'] + match['winner']['last_name']}</TableCell>
+								<TableCell align="left">{match['loser']['first_name'] + match['loser']['last_name']}</TableCell>
+								<TableCell align="left">{match['score']}</TableCell>
+							</TableRow>
+						))
+					}
+					</TableBody>
+				</Table>
+			)
+		})
+
+		return (
+			<div id="the_table">
+				<Paper>
+					{tables}
+				</Paper>
+			</div>
+		)
+	}
+
+	render2() {
 
 		function createData(name, calories, fat, carbs, protein) {
 			return { name, calories, fat, carbs, protein };
@@ -35,14 +79,14 @@ class MatchInfo extends React.Component {
 			<div id="the_table">
 				<Paper >
 					<Table >
-					<TableHead>
-					<TableRow>
-					<TableCell>Dessert (100g serving)</TableCell>
-					<TableCell align="right">Calories</TableCell>
-					<TableCell align="right">Fat&nbsp;(g)</TableCell>
-					<TableCell align="right">Carbs&nbsp;(g)</TableCell>
-					<TableCell align="right">Protein&nbsp;(g)</TableCell>
-					</TableRow>
+						<TableHead>
+							<TableRow>
+								<TableCell>Dessert (100g serving)</TableCell>
+								<TableCell align="right">Calories</TableCell>
+								<TableCell align="right">Fat&nbsp;(g)</TableCell>
+								<TableCell align="right">Carbs&nbsp;(g)</TableCell>
+								<TableCell align="right">Protein&nbsp;(g)</TableCell>
+							</TableRow>
 					</TableHead>
 					<TableBody>
 					{rows.map(row => (

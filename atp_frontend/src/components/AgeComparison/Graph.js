@@ -1,5 +1,5 @@
 import React from 'react';
-import {Line} from 'react-chartjs-2';
+import ChartComponent, {Chart, Line} from 'react-chartjs-2';
 
 class Graph extends React.Component {
 	constructor(props) {
@@ -9,7 +9,10 @@ class Graph extends React.Component {
 			labels: this.get_labels(20, 30),
 			start_age: 20,
 			end_age: 30,
-			available_colors: Graph.colors
+			available_colors: Graph.colors,
+			highlight_data_idx: -1,
+			highlight_idx1: 0,
+			highlight_idx2: 0
 		}
 	}
 
@@ -59,13 +62,13 @@ class Graph extends React.Component {
 				borderJoinStyle: 'miter',
 				pointBorderColor: color,
 				pointBackgroundColor: '#fff',
-				pointBorderWidth: 1,
-				pointHoverRadius: 5,
+				pointBorderWidth: 4,
+				pointHoverRadius: 7,
 				pointHoverBackgroundColor: color,
 				pointHoverBorderColor: 'rgba(220,220,220,1)',
-				pointHoverBorderWidth: 2,
+				pointHoverBorderWidth: 1,
 				pointRadius: 1,
-				pointHitRadius: 10,
+				pointHitRadius: 1,
 				data: ranks,
 			},
 			dates: dates,
@@ -167,7 +170,6 @@ class Graph extends React.Component {
 			var endpt = `/get_ranking_history?player_id=${player_ids[idx]}&starting_age=${start}&ending_age=${end}`
 			const response = await fetch(endpt);
 			const data = await response.json();
-			console.log(data)
 			var dates = data['data'].map(x => x['date'])
 			var ranks = data['data'].map(x => x['rank'])
 			var labels = data['data'].map(x => x['age'])
@@ -231,7 +233,6 @@ class Graph extends React.Component {
 
 		var promise = this.fetch_ranking_history(player_id, this.state.start_age, this.state.end_age)
 		promise.then(response => response.json().then(data => {
-			console.log(data)
 			var ranks = data['data'].map(x => x['rank'])
 			var dates = data['data'].map(x => x['date'])
 			var labels = data['data'].map(x => x['age'])
@@ -247,36 +248,73 @@ class Graph extends React.Component {
 		}))
 	}
 
+	collinear(x1, y1, x2, y2, x3, y3) {
+		return Math.abs(((y1 - y2) * (x1 - x3)) - ((y1 - y3) * (x1 - x2)))
+	}
+	// 
+	// such that these x and y coordinates are collinear with those
+	/*
+	find (if any) the two consecutive data points in any of the datasets
+	such that these x and y coordinates are collinear with those point
+	AND x lies beteen p1.x and p2.x.
+	if none, return null
+	*/
+	get_segment_intersection(chart, x, y) {
+		var e1 = 1 // slack for x
+		var e2 = 500 // slack for collineariy measure
+		for (var i = 0; i < this.state.datasets.length; i++) {
+			var nodes = chart.getDatasetMeta(i)['data']
+			nodes = nodes.filter(x => x['_model']['skip'] == false)
+			for (var j = 0; j < nodes.length - 1; j++) {
+				var start_x = nodes[j]['_model']['x']
+				var start_y = nodes[j]['_model']['y']
+				var end_x = nodes[j + 1]['_model']['x']
+				var end_y = nodes[j + 1]['_model']['y']
+				if (x < (start_x - e1) || x > (end_x + e1)) {
+					continue
+				}
+				var collinearity = this.collinear(x, y, start_x, start_y, end_x, end_y)
+				if (collinearity < e2) {
+					return {'data_idx': nodes[j]['_datasetIndex'], 'i1':nodes[j]['_index'], 'i2':nodes[j+1]['_index']}
+				}
+			}
+		}
+		return null
+	}
+
+	highlight_segment(data_idx, i1, i2) {
+		this.setState({
+			highlight_data_idx: data_idx,
+			highlight_idx1: i1,
+			highlight_idx2: i2
+		})
+	}
+
 	handle_hover(e, data) {
+		var chart = this.refs['graph']['chartInstance']
+		var x_pos = e['layerX']
+		var y_pos = e['layerY']
+		var indices = this.get_segment_intersection(chart, x_pos, y_pos)
+		if (indices === null) {
+			if (this.state.highlight_data_idx !== -1) {
+				this.setState({
+					highlight_data_idx: -1,
+					highlight_idx1: 0,
+					highlight_idx2: 0
+				})
+			}
+			return
+		}
+		this.highlight_segment(indices['data_idx'], indices['i1'], indices['i2'])
+	}
+
+	handle_hover2(e, data) {
+		var g = this.refs['graph']['chartInstance']
 		if (data.length == 0) {
 			return
 		}
-		var hover_y = e['layerY']
-		var others = data.map(x => [x['_model']['y']])
-		
-		// now find the index in others that hover_x, hover_y is closest to
-		var min_idx = 0
-		var min_dist = Math.abs(hover_y - others[0])
-		for (var i = 0; i < others.length; i++) {
-			var dist = Math.abs(hover_y - others[i])
-			if (dist < min_dist) {
-				min_idx = i;
-				min_dist = dist
-			}
-		}
-
-		// now get the rgb value at this index
-		var clr = data[min_idx]['_options']['borderColor']
-		// now find the dataset index that has this color
-		var target_dataset;
-		var dset;
-		for (dset of this.state.datasets) {
-			if (dset['data']['borderColor'] == clr) {
-				target_dataset = dset
-				break
-			}
-		}
-
+		var data_idx = g.getElementAtEvent(e)[0]['_datasetIndex']
+		var target_dataset = this.state.datasets[data_idx]
 		var player_id = target_dataset['player_id']
 		var player_name = target_dataset['player_name']
 		var idx = data[0]['_index']
@@ -296,7 +334,7 @@ class Graph extends React.Component {
 		}
 		var promise = this.fetch_significant_matches(player_id, left_date, right_date)
 		promise.then(response => response.json().then(data => {
-			console.log(data)
+			// console.log(data)
 		}))
 	}
 
@@ -311,6 +349,8 @@ class Graph extends React.Component {
 		} else {
 			max_ticks = 10
 		}
+
+		var g = this.refs['graph']
 
 		const options = {
 			scales: {
@@ -351,7 +391,8 @@ class Graph extends React.Component {
 			},
 
 			tooltips: {
-				mode: 'nearest'
+				mode: 'point',
+				intersect: true
 			},
 
 			onHover: (e, data) => this.handle_hover(e, data)
@@ -361,10 +402,47 @@ class Graph extends React.Component {
 			labels: this.state.labels,
 			datasets: datasets
 		};
+		var the_obj = this
+
+		Chart.controllers.myLine = Chart.controllers.line.extend({
+			draw: function () {
+				Chart.controllers.line.prototype.draw.apply(this, arguments)
+				
+				if (the_obj.state.highlight_data_idx == -1) {
+					return
+				}
+
+				function setCharAt(str,index,chr) {
+    				if(index > str.length-1) return str;
+    					return str.substr(0,index) + chr + str.substr(index+1);
+				}
+				
+				var meta = this['chart'].getDatasetMeta(the_obj.state.highlight_data_idx)
+				var ctx = this.chart.ctx;
+				var color = meta['dataset']['_model']['borderColor']
+				ctx.strokeStyle = color.substr(0, color.length - 2) + "0.3)"
+				ctx.lineWidth = 8;
+				ctx.beginPath();
+				var point1 = meta['data'][the_obj.state.highlight_idx1]
+				ctx.moveTo(point1['_model']['x'], point1['_model']['y'])
+				var point2 = meta['data'][the_obj.state.highlight_idx2]
+				ctx.bezierCurveTo(
+					point1['_model']['x'],
+					point1['_model']['y'],
+					point1['_model']['controlPointNextX'],
+					point1['_model']['controlPointNextY'],
+					point2['_model']['x'],
+					point2['_model']['y']
+				);
+				ctx.stroke();
+			}
+		});
 
 		return (
 			<div>
-				<Line
+				<ChartComponent
+					type='myLine'
+					ref="graph"
 					data={data}
 					options={options}
 				/>

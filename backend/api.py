@@ -62,11 +62,17 @@ def get_significant_matches():
 		for k, v in tourns.items():
 			res.append({'name':k, 'date': v['date'], 'matches':v['matches']})
 
+		rounds = ["R128", "R64", "R32", "R16", "QF", "SF", "F"]
+		def f(x):
+			try:
+				return rounds.index(x['round'])
+			except ValueError:
+				return -1
+
 		res.sort(key=lambda x: x['date'])
 
-		rounds = ["R128", "R64", "R32", "R16", "QF", "SF", "F"]
 		for i in range(len(res)):
-			res[i]['matches'].sort(key=lambda x: rounds.index(x['round']))
+			res[i]['matches'].sort(key=lambda x: f(x))
 		return res
 
 

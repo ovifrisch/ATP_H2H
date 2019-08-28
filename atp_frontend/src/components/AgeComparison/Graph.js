@@ -1,5 +1,13 @@
 import React from 'react';
 import ChartComponent, {Chart, Line} from 'react-chartjs-2';
+import { makeStyles } from '@material-ui/core/styles';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
+import './Graph.css';
 
 class Graph extends React.Component {
 	constructor(props) {
@@ -87,34 +95,6 @@ class Graph extends React.Component {
 
 	// http GET to flask api to fetch significant matches for this player at this age
 	fetch_significant_matches(p_id, date1, date2) {
-
-		// const sub_weeks = (date, N) => {
-		// 	if (N == 0) {
-		// 		return date
-		// 	}
-
-		// 	var year = date['yr']
-		// 	var mo = date['mo']
-		// 	var day = date['day']
-
-		// 	if (day - 7 >= 1) {
-		// 		day = day - 7
-		// 		return sub_weeks({'yr': year, 'mo':mo, 'day':day}, N - 1)
-		// 	}
-
-		// 	day = 30 - (7 - day)
-		// 	mo -= 1
-		// 	if (mo == 2 && day >= 29) {
-		// 		day = 28
-		// 	}
-
-		// 	if (mo == 0) {
-		// 		mo = 12
-		// 		year -= 1
-		// 	}
-
-		// 	return sub_weeks({'yr': year, 'mo':mo, 'day':day}, N - 1)
-		// }
 
 		const date_str = (date) => {
 			var mo;
@@ -260,7 +240,7 @@ class Graph extends React.Component {
 	*/
 	get_segment_intersection(chart, x, y) {
 		var e1 = 1 // slack for x
-		var e2 = 500 // slack for collineariy measure
+		var e2 = 400 // slack for collineariy measure
 		for (var i = 0; i < this.state.datasets.length; i++) {
 			var nodes = chart.getDatasetMeta(i)['data']
 			nodes = nodes.filter(x => x['_model']['skip'] == false)
@@ -301,50 +281,27 @@ class Graph extends React.Component {
 					highlight_idx1: 0,
 					highlight_idx2: 0
 				})
+				document.getElementById("the_table").setAttribute("style", "display:none")
 			}
+			return
+		} else if (this.state.highlight_data_idx !== -1) {
 			return
 		}
 		this.highlight_segment(indices['data_idx'], indices['i1'], indices['i2'])
-		this.fetch_and_process_match_data(indices['data_idx'], indices['i1'], indices['i2'])
+		this.fetch_and_process_match_data(indices['data_idx'], indices['i1'], indices['i2'], x_pos, y_pos)
 	}
 
-	fetch_and_process_match_data(data_idx, i1, i2) {
+	display_match_data(data, x, y) {
+		document.getElementById("the_table").setAttribute("style", `display:block; left:${x}px; top:${Math.max(0, y-240)}px`)
+	}
+
+	fetch_and_process_match_data(data_idx, i1, i2, x, y) {
 		var player_id = this.state.datasets[data_idx]['player_id']
 		var left_date = this.state.datasets[data_idx]['dates'][i1]
 		var right_date = this.state.datasets[data_idx]['dates'][i2]
 		var promise = this.fetch_significant_matches(player_id, left_date, right_date)
 		promise.then(response => response.json().then(data => {
-			console.log(data)
-		}))
-	}
-
-	handle_hover2(e, data) {
-		var g = this.refs['graph']['chartInstance']
-		if (data.length == 0) {
-			return
-		}
-		var data_idx = g.getElementAtEvent(e)[0]['_datasetIndex']
-		var target_dataset = this.state.datasets[data_idx]
-		var player_id = target_dataset['player_id']
-		var player_name = target_dataset['player_name']
-		var idx = data[0]['_index']
-		var right_date = target_dataset['dates'][idx]
-		// get the previous two dates
-		var left_date = null;
-		idx -= 1;
-		while (idx >= 0) {
-			left_date = target_dataset['dates'][idx]
-			if (left_date !== null) {
-				break
-			}
-			idx -= 1
-		}
-		if (left_date === null) {
-			return
-		}
-		var promise = this.fetch_significant_matches(player_id, left_date, right_date)
-		promise.then(response => response.json().then(data => {
-			// console.log(data)
+			this.display_match_data(data, x, y)
 		}))
 	}
 
@@ -448,14 +405,70 @@ class Graph extends React.Component {
 			}
 		});
 
+		// const useStyles = makeStyles(theme => ({
+		// root: {
+		// width: '100%',
+		// marginTop: theme.spacing(3),
+		// overflowX: 'auto',
+		// },
+		// table: {
+		// minWidth: 650,
+		// },
+		// }));
+
+		// const classes = useStyles();
+
+		function createData(name, calories, fat, carbs, protein) {
+			return { name, calories, fat, carbs, protein };
+		}
+
+		const rows = [
+			createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
+			createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
+			createData('Eclair', 262, 16.0, 24, 6.0),
+			createData('Cupcake', 305, 3.7, 67, 4.3),
+			createData('Gingerbread', 356, 16.0, 49, 3.9),
+		];
+
+
 		return (
 			<div>
-				<ChartComponent
-					type='myLine'
-					ref="graph"
-					data={data}
-					options={options}
-				/>
+				<div>
+					<ChartComponent
+						type='myLine'
+						ref="graph"
+						data={data}
+						options={options}
+					/>
+				</div>
+				<div id="the_table">
+					<Paper >
+						<Table >
+						<TableHead>
+						<TableRow>
+						<TableCell>Dessert (100g serving)</TableCell>
+						<TableCell align="right">Calories</TableCell>
+						<TableCell align="right">Fat&nbsp;(g)</TableCell>
+						<TableCell align="right">Carbs&nbsp;(g)</TableCell>
+						<TableCell align="right">Protein&nbsp;(g)</TableCell>
+						</TableRow>
+						</TableHead>
+						<TableBody>
+						{rows.map(row => (
+						<TableRow key={row.name}>
+						<TableCell component="th" scope="row">
+						{row.name}
+						</TableCell>
+						<TableCell align="right">{row.calories}</TableCell>
+						<TableCell align="right">{row.fat}</TableCell>
+						<TableCell align="right">{row.carbs}</TableCell>
+						<TableCell align="right">{row.protein}</TableCell>
+						</TableRow>
+						))}
+						</TableBody>
+						</Table>
+					</Paper>
+				</div>
 			</div>
 		)
 	}

@@ -1,0 +1,9 @@
+
+
+#the_table {
+	position: absolute;
+	border: 10px solid red;
+	display: none;
+	left: 0px;
+	top: 0px;
+}

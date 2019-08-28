@@ -9,10 +9,69 @@ main = Blueprint('main', __name__)
 # find the tournament name, and matches for this player between dat1 and date2
 @main.route('/get_significant_matches')
 def get_significant_matches():
+
+	def organize(data):
+		"""
+		input: list of (winner_name, loser_name, match date, tournament, score, round)
+		output: list of tournaments where each tournament is a dict with the following structure:
+		name:
+		date:
+		matches: [
+			winner:
+			loser:
+			score:
+			round:
+		]
+
+		tournaments are ordered by their start dates, and matches are ordered by their rounds
+		(earlier rounds first)
+		"""
+		res = []
+		tourns = {}
+
+		for d in data:
+			tourn = data[5]
+			if (tourn not in tourns):
+				tourns[tourn] = {'date':d[4], 'matches':[]}
+
+
+		for d in data:
+			# winner/loser first/last names
+			wf = d[0]
+			wl = d[1]
+			lf = d[2]
+			ll = d[3]
+			tourn = data[5]
+			scr = d[6]
+			rd = d[7]
+
+			tourns[tourn]['matches'].append(
+				{
+					'winner': {
+						'first_name': wf,
+						'last_name': wl
+					},
+					'loser': {
+						'first_name':lf,
+						'last_name':ll
+					},
+					'score': scr,
+					'round': rd
+				}
+			)
+
+		
+
+
+
+
+
+
 	player_id = int(request.args.get('player_id'))
 	starting_age = request.args.get('date1')
 	ending_age = request.args.get('date2')
-	data = atp.get_significant_matches(player_id, starting_age, ending_age)
+	data = atp.get_matches_between(player_id, starting_age, ending_age)
+	data = organize(data)
 	return jsonify({'data': data})
 
 

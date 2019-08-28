@@ -88,7 +88,7 @@ class QueryATP:
 	"""
 	get the matches for this player between age_start and age_end
 	"""
-	def get_significant_matches(self, player_id, date_start, date_end):
+	def get_matches_between(self, player_id, date_start, date_end):
 		players = """
 			SELECT player_id, first_name, last_name
 			FROM players

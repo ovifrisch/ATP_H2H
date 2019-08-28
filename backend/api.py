@@ -30,10 +30,9 @@ def get_significant_matches():
 		tourns = {}
 
 		for d in data:
-			tourn = data[5]
+			tourn = d[5]
 			if (tourn not in tourns):
 				tourns[tourn] = {'date':d[4], 'matches':[]}
-
 
 		for d in data:
 			# winner/loser first/last names
@@ -41,7 +40,7 @@ def get_significant_matches():
 			wl = d[1]
 			lf = d[2]
 			ll = d[3]
-			tourn = data[5]
+			tourn = d[5]
 			scr = d[6]
 			rd = d[7]
 
@@ -60,7 +59,15 @@ def get_significant_matches():
 				}
 			)
 
-		
+		for k, v in tourns.items():
+			res.append({'name':k, 'date': v['date'], 'matches':v['matches']})
+
+		res.sort(key=lambda x: x['date'])
+
+		rounds = ["R128", "R64", "R32", "R16", "QF", "SF", "F"]
+		for i in range(len(res)):
+			res[i]['matches'].sort(key=lambda x: rounds.index(x['round']))
+		return res
 
 
 
@@ -71,6 +78,7 @@ def get_significant_matches():
 	starting_age = request.args.get('date1')
 	ending_age = request.args.get('date2')
 	data = atp.get_matches_between(player_id, starting_age, ending_age)
+	print(data)
 	data = organize(data)
 	return jsonify({'data': data})
 

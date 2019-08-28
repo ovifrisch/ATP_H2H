@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from query_atp import QueryATP
 import math
+import numpy as np
 
 atp = QueryATP()
 main = Blueprint('main', __name__)
@@ -28,6 +29,29 @@ def get_ranking_history():
 	dob = parse_dt(p_info[0][3])
 	qres = atp.get_ranking_history(player_id, starting_age, ending_age)
 
+	def ranking_date_to_age(rank_date, dob):
+
+		def get_age(date, dob):
+			years = date['yr'] - dob['yr']
+			months = 0
+			if (date['mo'] < dob['mo']):
+				years -= 1
+				months = 12 - (dob['mo']-date['mo'])
+			else:
+				months = date['mo']-dob['mo']
+
+			days = 0
+			if (date['day'] < dob['day']):
+				months -= 1
+				days = 30 - (dob['day']-date['day'])
+			else:
+				days = date['day']-dob['day']
+			return (years, months, days)
+
+
+		age = get_age(rank_date, dob)
+		return age[0] + (age[1] / 12) + ((1/12) * (age[2] / 30))
+
 	def parse(history):
 		res = []
 		for hist in history:
@@ -38,103 +62,22 @@ def get_ranking_history():
 		return res
 
 	"""
-	filter out rankings that have not changed since previous ranking date,
-	keeping only the first and last instances of that ranking
-	ex: [1, 1, 1, 1, 2, 2, 2, 3, 3] => [1, 1, 2, 2, 3, 3]
+	limit the amount of data sent so that points aren't plotted very
+	closely together in the frontend. this depends on the age resolution
+	as well as how much the player is contained within that resolutuon
 	"""
 	def filter(history):
-		if (len(history) == 0):
+		if (len(history) < 2):
 			return history
-		filtered = [history[0]]
-		for i in range(1, len(history) - 1):
-			if (history[i]['rank'] == history[i-1]['rank'] and history[i]['rank'] == history[i+1]['rank']):
-				continue
-			else:
-				filtered.append(history[i])
-		if (len(history) > 1):
-			filtered.append(history[-1])
-		return filtered
+		this_start = ranking_date_to_age(history[0]['date'], dob)
+		this_end = ranking_date_to_age(history[-1]['date'], dob)
+		ratio = (this_start - this_end) / (ending_age - starting_age)
+		num_els = min(40*ratio, len(history))
+		idxs = np.round(np.linspace(0, len(history) - 1, num_els)).astype(int)
+		res = [history[i] for i in idxs]
+		return res
 
-	"""
-	motivation: if the player has been ranked at No. 1 for a long time,
-	and then moves to No.2, then we certainly want to record this
-	change in the UI. But if a player is moving around in the rankings
-	very frequently, we don't need to know about every single tiny change.
-
-	so this function takes a complete ranking history and reduces
-	it to a more compact version by collapsing consecutive rankings
-	that are the same or that are within some threshold, where this
-	threshold is low if the player's rank is numerically low, and high
-	if numerically high. The idea is that if a player has a good ranking,
-	like top 10 for example, a change of 1 ranking spot is more significant
-	than a change of 1 ranking spot for someone ranked in the top 100.
-
-	so the threshold is a function of a player's current ranking. i think a good
-	function is this:
-	lambda x => Math.floor(x/10)
-	rank 1-10 => 0
-	rank 11-20 => 1
-	rank 20-30 => 2
-	rank 30-40 => 
-
-	200-300 => 20
-	"""
-	def context_filter(history):
-
-		if (len(history) <= 2):
-			return history
-		
-
-		def threshold(rank):
-			return math.floor(rank / 10)
-
-		collapsed = [history[0]] 
-		# always add the first element
-		curr_threshold = threshold(history[0]['rank'])
-		curr_rank = history[0]['rank']
-		for i in range(1, len(history) - 1):
-			if (abs(history[i]['rank'] - curr_rank) <= curr_threshold and abs(history[i+1]['rank'] - curr_rank) <= curr_threshold):
-				continue
-			else:
-				if (collapsed[-1] != history[i]):
-					collapsed.append(history[i])
-				if (abs(history[i]['rank'] - curr_rank) > curr_threshold):
-					curr_threshold = threshold(history[i]['rank'])
-					curr_rank = history[i]['rank']
-				else:
-					curr_threshold = threshold(history[i+1]['rank'])
-					curr_rank = history[i+1]['rank']
-					collapsed.append(history[i+1])
-		if (collapsed[-1] != history[-1]):
-			collapsed.append(history[-1])
-		return collapsed
-
-
-
-	def ranking_date_to_age(rank_date, dob):
-
-			def get_age(date, dob):
-				years = date['yr'] - dob['yr']
-				months = 0
-				if (date['mo'] < dob['mo']):
-					years -= 1
-					months = 12 - (dob['mo']-date['mo'])
-				else:
-					months = date['mo']-dob['mo']
-
-				days = 0
-				if (date['day'] < dob['day']):
-					months -= 1
-					days = 30 - (dob['day']-date['day'])
-				else:
-					days = date['day']-dob['day']
-				return (years, months, days)
-
-
-			age = get_age(rank_date, dob)
-			return age[0] + (age[1] / 12) + ((1/12) * (age[2] / 30))
-
-	date_ranking = context_filter(parse(qres))
+	date_ranking = filter(parse(qres))
 	ranks = [x['rank'] for x in date_ranking]
 	dates = [x['date'] for x in date_ranking]
 	ages = list(map(lambda x: ranking_date_to_age(x, dob), dates))

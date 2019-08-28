@@ -167,6 +167,7 @@ class Graph extends React.Component {
 			var endpt = `/get_ranking_history?player_id=${player_ids[idx]}&starting_age=${start}&ending_age=${end}`
 			const response = await fetch(endpt);
 			const data = await response.json();
+			console.log(data)
 			var dates = data['data'].map(x => x['date'])
 			var ranks = data['data'].map(x => x['rank'])
 			var labels = data['data'].map(x => x['age'])
@@ -230,6 +231,7 @@ class Graph extends React.Component {
 
 		var promise = this.fetch_ranking_history(player_id, this.state.start_age, this.state.end_age)
 		promise.then(response => response.json().then(data => {
+			console.log(data)
 			var ranks = data['data'].map(x => x['rank'])
 			var dates = data['data'].map(x => x['date'])
 			var labels = data['data'].map(x => x['age'])

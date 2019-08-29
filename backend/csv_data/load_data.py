@@ -19,13 +19,13 @@ rankings_file_names = [base + "atp_rankings_current.csv"]
 # 		start = 0
 
 
-# matches_file_names = []
-# year = 2000
-# while (1):
-# 	if (year == 2020):
-# 		break
-# 	matches_file_names.append(base + "atp_matches_{}.csv".format(str(year)))
-# 	year += 1
+matches_file_names = []
+year = 2000
+while (1):
+	if (year == 2020):
+		break
+	matches_file_names.append(base + "atp_matches_{}.csv".format(str(year)))
+	year += 1
 
 
 
@@ -72,63 +72,63 @@ load all the players
 """
 load all the rankings
 """
-commands = []
-for rankings_file_name in rankings_file_names:
-	print("Reading " + rankings_file_name + " ...")
-	with open(rankings_file_name) as ranking_file:
-		csv_reader = csv.reader(ranking_file, delimiter=',')
-		line = 0
-		for row in csv_reader:
-			if (line == 0):
-				line += 1
-				continue
-			date = row[0]
-			date = date[:4] + "-" + date[4:6] + "-" + date[6:8]
-			rank = row[1]
-			player_id = row[2]
-			points = row[3]
-			if (points == ""):
-				points = "NULL"
-			values = "('{}', '{}', {}, {})".format(rank, date, points, player_id)
-			cmd = insert_command(values, "rankings")
-			commands.append(cmd)
-
-for command in commands:
-	cur.execute(command)
-
-conn.commit()
-
-
-
 # commands = []
-# for matches_file_name in matches_file_names:
-# 	print("Reading " + matches_file_name + " ...")
-# 	with open(matches_file_name) as matches_file:
-# 		commands = []
-# 		csv_reader = csv.reader(matches_file, delimiter=',')
+# for rankings_file_name in rankings_file_names:
+# 	print("Reading " + rankings_file_name + " ...")
+# 	with open(rankings_file_name) as ranking_file:
+# 		csv_reader = csv.reader(ranking_file, delimiter=',')
 # 		line = 0
 # 		for row in csv_reader:
 # 			if (line == 0):
 # 				line += 1
 # 				continue
-# 			winner_id = row[7]
-# 			loser_id = row[15]
-# 			date = row[5]
+# 			date = row[0]
 # 			date = date[:4] + "-" + date[4:6] + "-" + date[6:8]
-# 			tournament = row[1]
-# 			tournament = tournament.replace("'","")
-# 			score = row[23]
-# 			round_ = row[25]
-# 			values = "({}, {}, '{}', '{}', '{}', '{}')".format(winner_id, loser_id, date, tournament, score, round_)
-# 			cmd = insert_command(values, "matches")
+# 			rank = row[1]
+# 			player_id = row[2]
+# 			points = row[3]
+# 			if (points == ""):
+# 				points = "NULL"
+# 			values = "('{}', '{}', {}, {})".format(rank, date, points, player_id)
+# 			cmd = insert_command(values, "rankings")
 # 			commands.append(cmd)
 
-# 	print(len(commands))
-# 	for command in commands:
-# 		cur.execute(command)
+# for command in commands:
+# 	cur.execute(command)
 
-# 	conn.commit()
-# 	print("Committed " + matches_file_name + " ...")
+# conn.commit()
+
+
+
+commands = []
+the_id = 1
+for matches_file_name in matches_file_names:
+	print("Reading " + matches_file_name + " ...")
+	with open(matches_file_name) as matches_file:
+		commands = []
+		csv_reader = csv.reader(matches_file, delimiter=',')
+		line = 0
+		for row in csv_reader:
+			if (line == 0):
+				line += 1
+				continue
+			winner_id = row[7]
+			loser_id = row[15]
+			date = row[5]
+			date = date[:4] + "-" + date[4:6] + "-" + date[6:8]
+			tournament = row[1]
+			tournament = tournament.replace("'","")
+			score = row[23]
+			round_ = row[25]
+			values = "({}, {}, '{}', '{}', '{}', '{}', NULL, NULL)".format(the_id, winner_id, loser_id, date, tournament, score, round_)
+			cmd = insert_command(values, "matches")
+			commands.append(cmd)
+			the_id += 1
+	for command in commands:
+		cur.execute(command)
+
+	conn.commit()
+	print("Committed " + matches_file_name + " ...")
 
 
 

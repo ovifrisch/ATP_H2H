@@ -31,6 +31,8 @@ def get_significant_matches():
 				if (match_entry['video_url'] == None or match_entry['video_thumbnail'] == None):
 					query_str = get_query_str(tourney_name, tourney_date, match_entry)
 					video_info = tube.search(query_str)
+					if (video_info is None):
+						continue
 					title = video_info['title']
 					# HERE YOU SHOULD CHECK TO SEE IF THE TITLE IS RELEVANT
 					# IF IT'S NOT THEN DON'T SET THE VIDEO PARAMS, AND DON'T ADD
@@ -40,6 +42,7 @@ def get_significant_matches():
 						continue
 
 					# insert into db
+					atp.update_match_video(match_entry['id'], video_info)
 					match_entry['video_url'] = video_info['url']
 					match_entry['video_thumbnail'] = video_info['thumbnail']
 		return data
@@ -86,6 +89,7 @@ def get_significant_matches():
 			rd = d[7]
 			url = d[8]
 			thumb = d[9]
+			match_id = d[10]
 
 			tourns[tourn]['matches'].append(
 				{
@@ -100,7 +104,8 @@ def get_significant_matches():
 					'score': scr,
 					'round': rd,
 					'video_url': url,
-					'video_thumbnail': thumb
+					'video_thumbnail': thumb,
+					'id': match_id
 				}
 			)
 
@@ -125,6 +130,8 @@ def get_significant_matches():
 	starting_age = request.args.get('date1')
 	ending_age = request.args.get('date2')
 	data = atp.get_matches_between(player_id, starting_age, ending_age)
+	print(data)
+
 	# print(data)
 	data = organize(data)
 	data = fetch_missing_videos(data)

@@ -280,7 +280,7 @@ class Graph extends React.Component {
 					highlight_idx1: 0,
 					highlight_idx2: 0
 				})
-				document.getElementById("the_table").setAttribute("style", "display:none")
+				document.getElementById("the_table").setAttribute("style", "visibility:visible")
 			}
 			return
 		} else if (this.state.highlight_data_idx !== -1) {
@@ -290,19 +290,27 @@ class Graph extends React.Component {
 		this.fetch_and_process_match_data(indices['data_idx'], indices['i1'], indices['i2'], x_pos, y_pos)
 	}
 
-	display_match_data(data, x, y) {
-		console.log(data)
+	rgb2hex(rgb){
+		rgb = rgb.match(/^rgba?[\s+]?\([\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?,[\s+]?(\d+)[\s+]?/i);
+		return (rgb && rgb.length === 4) ? "#" +
+		("0" + parseInt(rgb[1],10).toString(16)).slice(-2) +
+		("0" + parseInt(rgb[2],10).toString(16)).slice(-2) +
+		("0" + parseInt(rgb[3],10).toString(16)).slice(-2) : '';
+	}
+
+	display_match_data(data, x, y, color) {
 		this.info_box.current.set_match_data(data['data'])
-		document.getElementById("the_table").setAttribute("style", `display:block; left:${x}px; top:${Math.max(0, y-240)}px`)
+		document.getElementById("the_table").setAttribute("style", `display:block; left:${x}px; top:${Math.max(0, y-240)}px; border: 10px solid ${this.rgb2hex(color)}`)
 	}
 
 	fetch_and_process_match_data(data_idx, i1, i2, x, y) {
+		var color = this.state.datasets[data_idx]['data']['borderColor']
 		var player_id = this.state.datasets[data_idx]['player_id']
 		var left_date = this.state.datasets[data_idx]['dates'][i1]
 		var right_date = this.state.datasets[data_idx]['dates'][i2]
 		var promise = this.fetch_significant_matches(player_id, left_date, right_date)
 		promise.then(response => response.json().then(data => {
-			this.display_match_data(data, x, y)
+			this.display_match_data(data, x, y, color)
 		}))
 	}
 

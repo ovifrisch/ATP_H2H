@@ -28,6 +28,7 @@ commands = [
 
 	"""
 	CREATE TABLE IF NOT EXISTS matches(
+		match_id int,
 		winner_id int,
 		loser_id int,
 		match_date date,
@@ -35,7 +36,7 @@ commands = [
 		score varchar(50),
 		round varchar(10),
 		video_url varchar(100),
-		thumbnail_url varchar(200)
+		video_thumbnail varchar(200)
 	);
 	"""
 ]

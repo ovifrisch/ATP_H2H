@@ -14,7 +14,6 @@ class QueryATP:
 		self.cur.execute(query)
 		results = self.cur.fetchall()
 		return results
-
 	"""
 	Given player's first and last name,
 	get their id
@@ -85,6 +84,30 @@ class QueryATP:
 		""".format(id_)
 		return self.get(q)
 
+
+	def update_match_video(self, match_id, info):
+		url = info['url']
+		thumb = info['thumbnail']
+
+		q = """
+		UPDATE matches
+		SET video_url = '{}', video_thumbnail = '{}'
+		WHERE match_id = {}
+		""".format(url, thumb, match_id)
+		self.cur.execute(q)
+
+
+	def xx(self):
+		q = """
+		SELECT tournament
+		FROM matches
+		WHERE winner_id = 104745 and match_date >= '{}' and match_date <= '{}' and loser_id = 200282
+		""".format("20190101", "20190201")
+
+		return self.get(q)
+
+
+
 	"""
 	get the matches for this player between age_start and age_end
 	"""
@@ -96,7 +119,7 @@ class QueryATP:
 
 		# select the matches where this player is the winner
 		temp1 = """
-			SELECT DISTINCT first_name, last_name, loser_id, match_date, tournament, score, round, video_url, video_thumbnail
+			SELECT DISTINCT first_name, last_name, loser_id, match_date, tournament, score, round, video_url, video_thumbnail, match_id
 			FROM matches
 			INNER JOIN ({}) AS A
 			ON matches.winner_id = A.player_id
@@ -105,7 +128,7 @@ class QueryATP:
 		""".format(players, player_id, date_start, date_end)
 
 		t1 = """
-			SELECT DISTINCT A.first_name, A.last_name, B.first_name, B.last_name, A.match_date, A.tournament, A.score, A.round, A.video_url, A.video_thumbnail
+			SELECT DISTINCT A.first_name, A.last_name, B.first_name, B.last_name, A.match_date, A.tournament, A.score, A.round, A.video_url, A.video_thumbnail, A.match_id
 			FROM ({}) AS A
 			INNER JOIN ({}) AS B
 			ON A.loser_id = B.player_id
@@ -113,7 +136,7 @@ class QueryATP:
 
 		# select the matches where this player is the loser
 		temp2 = """
-			SELECT DISTINCT first_name, last_name, winner_id, match_date, tournament, score, round, video_url, video_thumbnail
+			SELECT DISTINCT first_name, last_name, winner_id, match_date, tournament, score, round, video_url, video_thumbnail, match_id
 			FROM matches
 			INNER JOIN ({}) AS A
 			ON matches.loser_id = A.player_id
@@ -122,7 +145,7 @@ class QueryATP:
 		""".format(players, player_id, date_start, date_end)
 
 		t2 = """
-			SELECT DISTINCT B.first_name, B.last_name, A.first_name, A.last_name, A.match_date, A.tournament, A.score, A.round, A.video_url, A.video_thumbnail
+			SELECT DISTINCT B.first_name, B.last_name, A.first_name, A.last_name, A.match_date, A.tournament, A.score, A.round, A.video_url, A.video_thumbnail, A.match_id
 			FROM ({}) AS A
 			INNER JOIN ({}) AS B
 			ON A.winner_id = B.player_id
@@ -238,6 +261,8 @@ def plot_players(atp, players, start, end):
 
 if __name__ == "__main__":
 	atp = QueryATP()
+	# print(atp.player_info(104745))
+	# print(atp.xx())
 	print(atp.get_matches_between(104745, "20190101", "20190201"))
 	# i1 = atp.player_id("Rafael", "Nadal")[0][0]
 	# i2 = atp.player_id("Novak", "Djokovic")[0][0]

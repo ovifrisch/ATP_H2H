@@ -10,13 +10,21 @@ class Youtube:
 		"""
 		get the top result, return its thumbnail link, video link, and title
 		"""
-		response = self.youtube.search().list(
-			q = query_string,
-			part = 'snippet',
-			maxResults=1
-		).execute()
+		try:
+			response = self.youtube.search().list(
+				q = query_string,
+				part = 'snippet',
+				maxResults=1
+			).execute()
 
-		res = response['items'][0]
+		except HttpError:
+			return None
+
+		res = response['items']
+		if(len(res) == 0):
+			return None
+
+		res = res[0]
 		title = res['snippet']['title']
 		url = "youtube.com/watch?v=" + res['id']['videoId']
 		thumb = res['snippet']['thumbnails']['default']['url']

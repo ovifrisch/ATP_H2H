@@ -2,30 +2,67 @@ from flask import Blueprint, jsonify, request
 from query_atp import QueryATP
 import math
 import numpy as np
+from youtube import Youtube
 
 atp = QueryATP()
+tube = Youtube()
 main = Blueprint('main', __name__)
+
 
 # find the tournament name, and matches for this player between dat1 and date2
 @main.route('/get_significant_matches')
 def get_significant_matches():
 
-	def organize(data):
-		"""
-		input: list of (winner_name, loser_name, match date, tournament, score, round)
-		output: list of tournaments where each tournament is a dict with the following structure:
-		name:
-		date:
-		matches: [
-			winner:
-			loser:
-			score:
-			round:
-		]
+	def fetch_missing_videos(data):
 
-		tournaments are ordered by their start dates, and matches are ordered by their rounds
-		(earlier rounds first)
-		"""
+		def get_query_str(tourney_name, tourney_date, match_entry):
+			winner = " ".join([match_entry['winner']['first_name'], match_entry['winner']['last_name']])
+			loser = " ".join([match_entry['loser']['first_name'], match_entry['loser']['last_name']])
+			return " ".join([tourney_name, str(tourney_date.year), winner, "vs", loser])
+
+		def is_relevant(video_title, tourney_name, match_entry):
+			return True
+
+		for i in range(len(data)):
+			for j in range(len(data[i]['matches'])):
+				tourney_name = data[i]['name']
+				tourney_date = data[i]['date']
+				match_entry = data[i]['matches'][j]
+				if (match_entry['video_url'] == None or match_entry['video_thumbnail'] == None):
+					query_str = get_query_str(tourney_name, tourney_date, match_entry)
+					video_info = tube.search(query_str)
+					title = video_info['title']
+					# HERE YOU SHOULD CHECK TO SEE IF THE TITLE IS RELEVANT
+					# IF IT'S NOT THEN DON'T SET THE VIDEO PARAMS
+					if (not is_relevant(title, tourney_name, match_entry)):
+						continue
+					match_entry['video_url'] = video_info['url']
+					match_entry['video_thumbnail'] = video_info['thumbnail']
+		return data
+
+
+
+
+
+
+	"""
+	input: list of (winner_name, loser_name, match date, tournament, score, round)
+	output: list of tournaments where each tournament is a dict with the following structure:
+	name:
+	date:
+	matches: [
+		winner:
+		loser:
+		score:
+		round:
+		video_url:
+		video_thumbnail:
+	]
+
+	tournaments are ordered by their start dates, and matches are ordered by their rounds
+	(earlier rounds first)
+	"""
+	def organize(data):
 		res = []
 		tourns = {}
 
@@ -43,6 +80,8 @@ def get_significant_matches():
 			tourn = d[5]
 			scr = d[6]
 			rd = d[7]
+			url = d[8]
+			thumb = d[9]
 
 			tourns[tourn]['matches'].append(
 				{
@@ -55,7 +94,9 @@ def get_significant_matches():
 						'last_name':ll
 					},
 					'score': scr,
-					'round': rd
+					'round': rd,
+					'video_url': url,
+					'video_thumbnail': thumb
 				}
 			)
 
@@ -76,16 +117,13 @@ def get_significant_matches():
 		return res
 
 
-
-
-
-
 	player_id = int(request.args.get('player_id'))
 	starting_age = request.args.get('date1')
 	ending_age = request.args.get('date2')
 	data = atp.get_matches_between(player_id, starting_age, ending_age)
-	print(data)
+	# print(data)
 	data = organize(data)
+	data = fetch_missing_videos(data)
 	return jsonify({'data': data})
 
 

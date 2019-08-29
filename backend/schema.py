@@ -33,7 +33,9 @@ commands = [
 		match_date date,
 		tournament varchar(50),
 		score varchar(50),
-		round varchar(10)
+		round varchar(10),
+		video_url varchar(100),
+		thumbnail_url varchar(200)
 	);
 	"""
 ]

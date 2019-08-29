@@ -268,11 +268,13 @@ class Graph extends React.Component {
 		})
 	}
 
+	// called whenever the user hovers any part of the chart
 	handle_hover(e, data) {
 		var chart = this.refs['graph']['chartInstance']
 		var x_pos = e['layerX']
 		var y_pos = e['layerY']
 		var indices = this.get_segment_intersection(chart, x_pos, y_pos)
+
 		if (indices === null) {
 			if (this.state.highlight_data_idx !== -1) {
 				this.setState({
@@ -368,8 +370,7 @@ class Graph extends React.Component {
 			},
 
 			tooltips: {
-				mode: 'point',
-				intersect: true
+				enabled: false
 			},
 
 			onHover: (e, data) => this.handle_hover(e, data)

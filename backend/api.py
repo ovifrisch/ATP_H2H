@@ -33,9 +33,13 @@ def get_significant_matches():
 					video_info = tube.search(query_str)
 					title = video_info['title']
 					# HERE YOU SHOULD CHECK TO SEE IF THE TITLE IS RELEVANT
-					# IF IT'S NOT THEN DON'T SET THE VIDEO PARAMS
+					# IF IT'S NOT THEN DON'T SET THE VIDEO PARAMS, AND DON'T ADD
+					# TO DB. INSTEAD ADD TO DB A SPECIAL VALUE THAT U CHECK FOR
+					# AND IF IT'S SET YOU JUST IGNORE THIS ENTRY
 					if (not is_relevant(title, tourney_name, match_entry)):
 						continue
+
+					# insert into db
 					match_entry['video_url'] = video_info['url']
 					match_entry['video_thumbnail'] = video_info['thumbnail']
 		return data

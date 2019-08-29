@@ -1,12 +1,11 @@
 import React from 'react';
 import { Menu } from 'semantic-ui-react'
-import './Header.css'
+import './Footer.css'
 
-function Header() {
+function Footer() {
 	return (
-		<div id="the_header">
-			<Menu id = "the_menu_item">
-				<Menu.Item header>ATP Visualizer</Menu.Item>
+		<div id="the_footer">
+			<Menu>
 				<Menu.Item
 					name='XXX'
 					// active={activeItem === 'aboutUs'}
@@ -27,4 +26,4 @@ function Header() {
 	)
 }
 
-export default Header;
+export default Footer;

@@ -1,6 +1,7 @@
 import React from 'react';
 import './App.css';
 import Header from "./components/Header"
+import Footer from './components/Footer'
 import AgeComparison from "./components/AgeComparison/AgeComparison"
 import Head2Head from "./components/Head2Head/Head2Head"
 import {

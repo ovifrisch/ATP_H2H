@@ -1,5 +1,14 @@
+
+html, body {
+  height: 100%;
+  background: radial-gradient(#c3e2f7, #2293e0);
+}
+
 #the_app {
-  position: relative;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(#c3e2f7, #2293e0);
 }
 
 .App {

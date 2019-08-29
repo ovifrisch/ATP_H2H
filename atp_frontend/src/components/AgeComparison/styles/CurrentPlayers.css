@@ -1,0 +1,13 @@
+#the_current_players {
+	position: relative;
+	top: 2%;
+}
+
+#the_current_player {
+	position: relative;
+	top: 10px;
+}
+
+.player_button {
+	color: white !important;
+}

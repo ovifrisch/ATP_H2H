@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button } from 'semantic-ui-react'
+import './styles/CurrentPlayers.css'
 
 class CurrentPlayers extends React.Component {
 	constructor(props) {
@@ -9,18 +10,12 @@ class CurrentPlayers extends React.Component {
 		}
 	}
 
-	addPlayer(id, name) {
+	addPlayer(id, name, color) {
 		if (this.state.players.map(x => x['id']).includes(id)) {
 			return
 		}
 		this.setState({
-			players: [...this.state.players, {id: id, name:name}]
-		})
-	}
-
-	componentWillReceiveProps(nextProps) {
-		this.setState({
-			players: nextProps.players
+			players: [...this.state.players, {id: id, name:name, color:color}]
 		})
 	}
 
@@ -32,15 +27,18 @@ class CurrentPlayers extends React.Component {
 	}
 
 	render() {
-
 		const players = this.state.players.map((player) => {
 			return (
-				<Button id={player['id']} key={player['id']} onClick={(e, data) => this.handle_button_click(data)}>{player['name']}</Button>
+				<div id="the_current_player" key={player['id']}>
+					<Button className="player_button" style={{backgroundColor: player['color'], borderRadius: 0}} id={player['id']} onClick={(e, data) => this.handle_button_click(data)}>{player['name']}</Button>
+					<br></br>
+					<br></br>
+				</div>
 			)
 		})
 
 		return (
-			<div>
+			<div id="the_current_players">
 				{players}
 			</div>
 		)

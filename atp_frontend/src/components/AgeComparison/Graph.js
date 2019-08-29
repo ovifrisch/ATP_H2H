@@ -60,6 +60,7 @@ class Graph extends React.Component {
 				lineTension: 0.1,
 				backgroundColor: color,
 				borderColor: color,
+				borderWidth: 3,
 				borderCapStyle: 'butt',
 				borderDash: [],
 				borderDashOffset: 0.0,
@@ -207,6 +208,7 @@ class Graph extends React.Component {
 		}
 
 		var promise = this.fetch_ranking_history(player_id, this.state.start_age, this.state.end_age)
+		var color = this.get_color()
 		promise.then(response => response.json().then(data => {
 			var ranks = data['data'].map(x => x['rank'])
 			var dates = data['data'].map(x => x['date'])
@@ -214,13 +216,15 @@ class Graph extends React.Component {
 			var values = this.pad_ranks(ranks, dates, labels, this.state.start_age, this.state.end_age)
 			var padded_ranks = values[0]
 			var padded_dates = values[1]
-			var color = this.get_color()
 			var new_dataset = this.create_dataset(padded_ranks, padded_dates, player_name, player_id, color)
 			this.setState({
 				datasets: [...this.state.datasets, new_dataset],
 				available_colors: this.state.available_colors.slice(1)
 			})
 		}))
+
+		console.log(color)
+		return color
 	}
 
 	collinear(x1, y1, x2, y2, x3, y3) {
@@ -236,7 +240,7 @@ class Graph extends React.Component {
 	*/
 	get_segment_intersection(chart, x, y) {
 		var e1 = 1 // slack for x
-		var e2 = 400 // slack for collineariy measure
+		var e2 = 300 // slack for collineariy measure
 		for (var i = 0; i < this.state.datasets.length; i++) {
 			var nodes = chart.getDatasetMeta(i)['data']
 			nodes = nodes.filter(x => x['_model']['skip'] == false)
@@ -269,6 +273,8 @@ class Graph extends React.Component {
 		var chart = this.refs['graph']['chartInstance']
 		var x_pos = e['layerX']
 		var y_pos = e['layerY']
+		console.log(x_pos, y_pos)
+		console.log(data)
 		var indices = this.get_segment_intersection(chart, x_pos, y_pos)
 		if (indices === null) {
 			if (this.state.highlight_data_idx !== -1) {
@@ -317,6 +323,7 @@ class Graph extends React.Component {
 		var g = this.refs['graph']
 
 		const options = {
+
 			scales: {
 				yAxes: [{
 					scaleLabel: {
@@ -385,7 +392,7 @@ class Graph extends React.Component {
 				var ctx = this.chart.ctx;
 				var color = meta['dataset']['_model']['borderColor']
 				ctx.strokeStyle = color.substr(0, color.length - 2) + "0.3)"
-				ctx.lineWidth = 8;
+				ctx.lineWidth = 10;
 				ctx.beginPath();
 				var point1 = meta['data'][the_obj.state.highlight_idx1]
 				ctx.moveTo(point1['_model']['x'], point1['_model']['y'])

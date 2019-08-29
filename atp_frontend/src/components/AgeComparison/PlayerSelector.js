@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import { Dropdown } from 'semantic-ui-react'
 import faker from 'faker'
+import './styles/PlayerSelector.css'
 
 class PlayerSelector extends React.Component {
 	constructor(props) {
@@ -77,14 +78,16 @@ class PlayerSelector extends React.Component {
 		  }
 		]
 		return (
-			<Dropdown
-			    placeholder='Select a Player'
-			    search
-			    selection
-			    onChange={(_, data) => this.label_click(data)}
-			    onSearchChange={(_, data) => this.search_change(data)}
-			    options={this.state.players}
-			/>
+			<div id="the_player_selector">
+				<Dropdown
+					placeholder='Select a Player'
+					search
+					selection
+					onChange={(_, data) => this.label_click(data)}
+					onSearchChange={(_, data) => this.search_change(data)}
+					options={this.state.players}
+				/>
+			</div>
 		)
 	}
 }

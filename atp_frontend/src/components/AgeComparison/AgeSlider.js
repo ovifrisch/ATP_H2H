@@ -30,7 +30,7 @@ class AgeSlider extends React.Component {
 
 		const PrettoSlider = withStyles({
 			root: {
-				color: '#52af77',
+				color: '#2522e0',
 				height: 8,
 			},
 			thumb: {

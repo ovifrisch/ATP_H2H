@@ -223,7 +223,6 @@ class Graph extends React.Component {
 			})
 		}))
 
-		console.log(color)
 		return color
 	}
 
@@ -273,8 +272,6 @@ class Graph extends React.Component {
 		var chart = this.refs['graph']['chartInstance']
 		var x_pos = e['layerX']
 		var y_pos = e['layerY']
-		console.log(x_pos, y_pos)
-		console.log(data)
 		var indices = this.get_segment_intersection(chart, x_pos, y_pos)
 		if (indices === null) {
 			if (this.state.highlight_data_idx !== -1) {
@@ -294,6 +291,7 @@ class Graph extends React.Component {
 	}
 
 	display_match_data(data, x, y) {
+		console.log(data)
 		this.info_box.current.set_match_data(data['data'])
 		document.getElementById("the_table").setAttribute("style", `display:block; left:${x}px; top:${Math.max(0, y-240)}px`)
 	}

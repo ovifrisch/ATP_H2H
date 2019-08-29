@@ -275,19 +275,31 @@ class Graph extends React.Component {
 		var y_pos = e['layerY']
 		var indices = this.get_segment_intersection(chart, x_pos, y_pos)
 
+		// not hovering a segment
 		if (indices === null) {
+
+			// was previously hovering a segment
 			if (this.state.highlight_data_idx !== -1) {
 				this.setState({
 					highlight_data_idx: -1,
 					highlight_idx1: 0,
 					highlight_idx2: 0
 				})
-				document.getElementById("the_table").setAttribute("style", "visibility:visible")
+				document.getElementById("the_table").setAttribute("style", "display:none")
 			}
 			return
+
+		// hovering a segment, was previously hovering it
 		} else if (this.state.highlight_data_idx !== -1) {
-			return
+			// same highlight segment
+			if (indices['i1'] == this.state.highlight_idx1 && indices['i2'] == this.state.highlight_idx2) {
+				return
+			} else {
+				document.getElementById("the_table").setAttribute("style", "display:none")
+			}
 		}
+
+		// hovering a segment, just started hovering it
 		this.highlight_segment(indices['data_idx'], indices['i1'], indices['i2'])
 		this.fetch_and_process_match_data(indices['data_idx'], indices['i1'], indices['i2'], x_pos, y_pos)
 	}
